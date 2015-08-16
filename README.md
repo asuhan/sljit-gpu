@@ -20,12 +20,13 @@ generation in order to unblock running on GPUs. Registers are implemented as all
 need to enable the SROA optimization pass for performance. Control flow is implemented through continuations and it'll also
 need some optimization work for competitive performance.
 
+This project doesn't include any parallelization changes yet (but they will land), which are crucial for performance on GPUs;
+current focus is on correctness.
+
 ## Non-goals
 
 Replacing (or improving) any of the current backends is a non-goal. It's highly unlikely we'll invest a lot
-of effort into features which are not fundamentally required by the regex engine (floating point, self-modifying code, fast calls).
-This project doesn't include any parallelization changes yet (but they will land), which are crucial for performance on GPUs;
-current focus is on correctness. We also assume that the strings are already in the GPU memory and stored contiguously;
+of effort into features which are not fundamentally required by the regex engine (floating point, self-modifying code, fast calls). We also assume that the strings are already in the GPU memory and stored contiguously;
 using GPUs as an "offload engine" over PCI Express is a non-goal.
 
 ## Contributing
