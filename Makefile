@@ -5,6 +5,8 @@ else
 CC = $(CROSS_COMPILER)
 endif
 
+CXX = g++
+
 ifndef EXTRA_CPPFLAGS
 EXTRA_CPPFLAGS=
 endif
@@ -13,10 +15,11 @@ ifndef EXTRA_LDFLAGS
 EXTRA_LDFLAGS=
 endif
 
-CPPFLAGS = $(EXTRA_CPPFLAGS) -DSLJIT_CONFIG_AUTO=1 -Isljit_src
-CFLAGS = -O2 -Wall
+CPPFLAGS = $(EXTRA_CPPFLAGS) -DSLJIT_CONFIG_AUTO=1 -DSLJIT_CONFIG_LLVM=1 -Isljit_src $(shell llvm-config-3.6 --cflags)
+CFLAGS = -O0 -g -Wall -Wno-unused-function
 REGEX_CFLAGS = -fshort-wchar
-LDFLAGS = $(EXTRA_LDFLAGS)
+LDFLAGS = $(EXTRA_LDFLAGS) $(shell llvm-config-3.6 --cxxflags --ldflags --libs --system-libs)
+LD = g++
 
 TARGET = sljit_test regex_test
 
@@ -43,6 +46,9 @@ $(BINDIR) :
 $(BINDIR)/sljitLir.o : $(BINDIR) $(SLJIT_LIR_FILES) $(SLJIT_HEADERS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $(SRCDIR)/sljitLir.c
 
+$(BINDIR)/LLVMCWrappers.o : $(BINDIR) $(SRCDIR)/LLVMCWrappers.cpp
+	$(CXX) -Wall -O0 -g -std=c++11 $(CPPFLAGS) $(CFLAGS) -c -o $@ $(SRCDIR)/LLVMCWrappers.cpp
+
 $(BINDIR)/sljitMain.o : $(TESTDIR)/sljitMain.c $(BINDIR) $(SLJIT_HEADERS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $(TESTDIR)/sljitMain.c
 
@@ -58,8 +64,8 @@ $(BINDIR)/regexJIT.o : $(REGEXDIR)/regexJIT.c $(BINDIR) $(SLJIT_HEADERS) $(REGEX
 clean:
 	rm -f $(BINDIR)/*.o $(BINDIR)/sljit_test $(BINDIR)/regex_test
 
-sljit_test: $(BINDIR)/sljitMain.o $(BINDIR)/sljitTest.o $(BINDIR)/sljitLir.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BINDIR)/sljitMain.o $(BINDIR)/sljitTest.o $(BINDIR)/sljitLir.o -o $(BINDIR)/$@ -lm -lpthread
+sljit_test: $(BINDIR)/sljitMain.o $(BINDIR)/sljitTest.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o
+	$(LD) $(CFLAGS) $(BINDIR)/sljitMain.o $(BINDIR)/sljitTest.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o -o $(BINDIR)/$@ $(LDFLAGS) -lm -lpthread
 
-regex_test: $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o
-	$(CC) $(CFLAGS) $(LDFLAGS) $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o -o $(BINDIR)/$@ -lm -lpthread
+regex_test: $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o
+	$(LD) $(CFLAGS) $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o -o $(BINDIR)/$@ $(LDFLAGS) -lm -lpthread

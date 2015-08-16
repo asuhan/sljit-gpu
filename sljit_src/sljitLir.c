@@ -325,6 +325,18 @@ static sljit_si compiler_initialized = 0;
 static void init_compiler(void);
 #endif
 
+#ifdef SLJIT_CONFIG_LLVM
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_llvm_compiler()
+{
+	struct sljit_compiler *compiler = (struct sljit_compiler*)SLJIT_MALLOC(sizeof(struct sljit_compiler));
+	if (!compiler)
+		return NULL;
+	SLJIT_ZEROMEM(compiler, sizeof(struct sljit_compiler));
+	compiler->llvm_module = LLVMModuleCreateWithName("sljit");
+	return compiler;
+}
+#endif
+
 SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler(void)
 {
 	struct sljit_compiler *compiler = (struct sljit_compiler*)SLJIT_MALLOC(sizeof(struct sljit_compiler));
@@ -431,6 +443,24 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compile
 	SLJIT_FREE(compiler);
 }
 
+void sljit_free_llvm_compiler_impl(struct sljit_compiler *compiler);
+
+SLJIT_API_FUNC_ATTRIBUTE void sljit_free_llvm_compiler(struct sljit_compiler *compiler)
+{
+	sljit_free_llvm_compiler_impl(compiler);
+#if (defined SLJIT_CONFIG_ARM_V5 && SLJIT_CONFIG_ARM_V5)
+	SLJIT_FREE(compiler->cpool);
+#endif
+	SLJIT_FREE(compiler);
+}
+
+void sljit_llvm_free_code_impl(struct sljit_compiler *compiler);
+
+SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_free_code(struct sljit_compiler *compiler)
+{
+	sljit_llvm_free_code_impl(compiler);
+}
+
 #if (defined SLJIT_CONFIG_ARM_THUMB2 && SLJIT_CONFIG_ARM_THUMB2)
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code)
 {
@@ -453,6 +483,7 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code)
 
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_label(struct sljit_jump *jump, struct sljit_label* label)
 {
+	SLJIT_ASSERT(0);
 	if (SLJIT_LIKELY(!!jump) && SLJIT_LIKELY(!!label)) {
 		jump->flags &= ~JUMP_ADDR;
 		jump->flags |= JUMP_LABEL;
@@ -1537,7 +1568,7 @@ static SLJIT_INLINE sljit_si emit_mov_before_return(struct sljit_compiler *compi
 #define SLJIT_CPUINFO SLJIT_CPUINFO_PART1 SLJIT_CPUINFO_PART2 SLJIT_CPUINFO_PART3
 
 #if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
-#	include "sljitNativeX86_common.c"
+#	include "sljitLLVM.c"
 #elif (defined SLJIT_CONFIG_ARM_V5 && SLJIT_CONFIG_ARM_V5)
 #	include "sljitNativeARM_32.c"
 #elif (defined SLJIT_CONFIG_ARM_V7 && SLJIT_CONFIG_ARM_V7)
@@ -1562,12 +1593,13 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_cmp(struct sljit_compiler
 	sljit_si src1, sljit_sw src1w,
 	sljit_si src2, sljit_sw src2w)
 {
+//	SLJIT_ASSERT(0);
 	/* Default compare for most architectures. */
 	sljit_si flags, tmp_src, condition;
 	sljit_sw tmp_srcw;
 
 	CHECK_ERROR_PTR();
-	CHECK_PTR(check_sljit_emit_cmp(compiler, type, src1, src1w, src2, src2w));
+	//CHECK_PTR(check_sljit_emit_cmp(compiler, type, src1, src1w, src2, src2w));
 
 	condition = type & 0xff;
 #if (defined SLJIT_CONFIG_ARM_64 && SLJIT_CONFIG_ARM_64)

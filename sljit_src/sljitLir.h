@@ -80,6 +80,14 @@ of sljitConfigInternal.h */
 
 #include "sljitConfigInternal.h"
 
+#ifdef SLJIT_CONFIG_LLVM
+#include <llvm-c/Core.h>
+#include <llvm-c/ExecutionEngine.h>
+#include <llvm-c/Target.h>
+#include <llvm-c/Analysis.h>
+#include <llvm-c/BitWriter.h>
+#endif
+
 /* --------------------------------------------------------------------- */
 /*  Error codes                                                          */
 /* --------------------------------------------------------------------- */
@@ -276,14 +284,22 @@ struct sljit_memory_fragment {
 
 struct sljit_label {
 	struct sljit_label *next;
+#ifdef SLJIT_CONFIG_LLVM
+        LLVMValueRef addr;
+#else
 	sljit_uw addr;
+#endif
 	/* The maximum size difference. */
 	sljit_uw size;
 };
 
 struct sljit_jump {
 	struct sljit_jump *next;
+#ifdef SLJIT_CONFIG_LLVM
+        LLVMValueRef addr;
+#else
 	sljit_uw addr;
+#endif
 	sljit_sw flags;
 	union {
 		sljit_uw target;
@@ -388,6 +404,16 @@ struct sljit_compiler {
 	sljit_sw cache_argw;
 #endif
 
+#ifdef SLJIT_CONFIG_LLVM
+	LLVMModuleRef llvm_module;
+	LLVMBuilderRef llvm_builder;
+	LLVMValueRef llvm_func;
+	LLVMExecutionEngineRef llvm_engine;
+	LLVMValueRef llvm_regs;
+	LLVMValueRef llvm_flags;
+        void* llvm_native_code;
+#endif
+
 #if (defined SLJIT_VERBOSE && SLJIT_VERBOSE)
 	FILE* verbose;
 #endif
@@ -413,8 +439,15 @@ struct sljit_compiler {
    Returns NULL if failed. */
 SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler(void);
 
+#ifdef SLJIT_CONFIG_LLVM
+/* Creates an sljit LLVM compiler.
+   Returns NULL if failed. */
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_llvm_compiler();
+#endif
+
 /* Free everything except the compiled machine code. */
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compiler);
+SLJIT_API_FUNC_ATTRIBUTE void sljit_free_llvm_compiler(struct sljit_compiler *compiler);
 
 /* Returns the current error code. If an error is occurred, future sljit
    calls which uses the same compiler argument returns early with the same
@@ -443,6 +476,9 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_compiler_verbose(struct sljit_compiler *comp
 
 SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compiler);
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code);
+
+SLJIT_API_FUNC_ATTRIBUTE void* sljit_llvm_generate_code(struct sljit_compiler *compiler);
+SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_free_code(struct sljit_compiler *compiler);
 
 /*
    After the machine code generation is finished we can retrieve the allocated
@@ -1040,6 +1076,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_fcmp(struct sljit_compile
 
 /* Set the destination of the jump to this label. */
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_label(struct sljit_jump *jump, struct sljit_label* label);
+SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_set_label(struct sljit_compiler *compiler, struct sljit_jump *jump, struct sljit_label* label);
 /* Set the destination address of the jump to this label. */
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_target(struct sljit_jump *jump, sljit_uw target);
 
@@ -1082,8 +1119,13 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_const* sljit_emit_const(struct sljit_compi
 /* After the code generation the address for label, jump and const instructions
    are computed. Since these structures are freed by sljit_free_compiler, the
    addresses must be preserved by the user program elsewere. */
+#ifdef SLJIT_CONFIG_LLVM
+static SLJIT_INLINE sljit_uw sljit_get_label_addr(struct sljit_label *label) { return (sljit_uw) label->addr; }
+static SLJIT_INLINE sljit_uw sljit_get_jump_addr(struct sljit_jump *jump) { return (sljit_uw) jump->addr; }
+#else
 static SLJIT_INLINE sljit_uw sljit_get_label_addr(struct sljit_label *label) { return label->addr; }
 static SLJIT_INLINE sljit_uw sljit_get_jump_addr(struct sljit_jump *jump) { return jump->addr; }
+#endif
 static SLJIT_INLINE sljit_uw sljit_get_const_addr(struct sljit_const *const_) { return const_->addr; }
 
 /* Only the address is required to rewrite the code. */
