@@ -69,6 +69,14 @@ static sljit_si silent = 0;
 		return; \
 	}
 
+#ifdef SLJIT_CONFIG_LLVM
+#define SLJIT_SET_LABEL(jump, label) sljit_llvm_set_label(compiler, jump, label)
+#define SLJIT_FREE_CODE() sljit_llvm_free_code(compiler)
+#else
+#define SLJIT_SET_LABEL(jump, label) sljit_set_label(jump, label)
+#define SLJIT_FREE_CODE() sljit_free_code(code.code)
+#endif
+
 static void cond_set(struct sljit_compiler *compiler, sljit_si dst, sljit_sw dstw, sljit_si type)
 {
 	/* Testing both sljit_emit_op_flags and sljit_emit_jump. */
@@ -79,7 +87,7 @@ static void cond_set(struct sljit_compiler *compiler, sljit_si dst, sljit_sw dst
 	jump = sljit_emit_jump(compiler, type);
 	sljit_emit_op2(compiler, SLJIT_ADD | SLJIT_KEEP_FLAGS, dst, dstw, dst, dstw, SLJIT_IMM, 2);
 	label = sljit_emit_label(compiler);
-	sljit_llvm_set_label(compiler, jump, label);
+	SLJIT_SET_LABEL(jump, label);
 }
 
 #if !(defined SLJIT_CONFIG_UNSUPPORTED && SLJIT_CONFIG_UNSUPPORTED)
@@ -158,7 +166,7 @@ static void test1(void)
 	jump1 = sljit_emit_cmp(compiler, SLJIT_LESS_EQUAL, SLJIT_S0, 0, SLJIT_IMM, 0);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_S1, 0);
 	label1 = sljit_emit_label(compiler);
-	sljit_llvm_set_label(compiler, jump1, label1);
+	SLJIT_SET_LABEL(jump1, label1);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_S0, 0);
 
 	SLJIT_ASSERT(sljit_get_generated_code_size(compiler) == 0);
@@ -166,12 +174,12 @@ static void test1(void)
 	CHECK(compiler);
 	SLJIT_ASSERT(compiler->error == SLJIT_ERR_COMPILED);
 	SLJIT_ASSERT(sljit_get_generated_code_size(compiler) > 0);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func3(3, -21, 86) != -21, "test1 case 1 failed\n");
 	FAILED(code.func3(4789, 47890, 997) != 47890, "test1 case 2 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -222,7 +230,7 @@ static void test2(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != 9999, "test2 case 1 failed\n");
 	FAILED(buf[1] != 9999, "test2 case 2 failed\n");
@@ -233,7 +241,7 @@ static void test2(void)
 	FAILED(buf[6] != 3456, "test2 case 6 failed\n");
 	FAILED(buf[7] != 3456, "test2 case 6 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -267,14 +275,14 @@ static void test3(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != ~1234, "test3 case 1 failed\n");
 	FAILED(buf[1] != ~1234, "test3 case 2 failed\n");
 	FAILED(buf[3] != ~9876, "test3 case 3 failed\n");
 	FAILED(buf[4] != ~0x12345678, "test3 case 4 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -304,14 +312,14 @@ static void test4(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func2((sljit_sw)&buf, 4567) != -4567, "test4 case 1 failed\n");
 	FAILED(buf[0] != -1234, "test4 case 2 failed\n");
 	FAILED(buf[2] != -4567, "test4 case 3 failed\n");
 	FAILED(buf[3] != -299, "test4 case 4 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -366,7 +374,7 @@ static void test5(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != 2437 + 2 * sizeof(sljit_sw), "test5 case 1 failed\n");
 	FAILED(buf[0] != 202 + 2 * sizeof(sljit_sw), "test5 case 2 failed\n");
@@ -378,7 +386,7 @@ static void test5(void)
 	FAILED(buf[7] != 0x5bf01e44, "test5 case 8 failed\n");
 	FAILED(buf[8] != 270, "test5 case 9 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -440,7 +448,7 @@ static void test6(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != 2223, "test6 case 1 failed\n");
 	FAILED(buf[0] != 1, "test6 case 2 failed\n");
@@ -454,7 +462,7 @@ static void test6(void)
 	FAILED(buf[8] != 100 + 32767, "test6 case 10 failed\n");
 	FAILED(buf[9] != 0x152aa42e, "test6 case 11 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -501,7 +509,7 @@ static void test7(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != 0x8808, "test7 case 1 failed\n");
 	FAILED(buf[0] != 0x0F807F00, "test7 case 2 failed\n");
@@ -513,7 +521,7 @@ static void test7(void)
 	FAILED(buf[6] != 0xa56c82c0, "test7 case 8 failed\n");
 	FAILED(buf[7] != 0x3b3a8095, "test7 case 9 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -585,7 +593,7 @@ static void test8(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[1] != 1, "test8 case 1 failed\n");
@@ -601,7 +609,7 @@ static void test8(void)
 	FAILED(buf[11] != 1, "test8 case 11 failed\n");
 	FAILED(buf[12] != 0, "test8 case 12 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -711,7 +719,7 @@ static void test9(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[0] != 0x3c, "test9 case 1 failed\n");
@@ -728,7 +736,7 @@ static void test9(void)
 	FAILED(buf[11] != 0x4ae37da9, "test9 case 12 failed\n");
 	FAILED(buf[12] != 0x63f65c, "test9 case 13 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -778,7 +786,7 @@ static void test10(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != 110, "test10 case 1 failed\n");
 	FAILED(buf[0] != 15, "test10 case 2 failed\n");
@@ -791,7 +799,7 @@ static void test10(void)
 	FAILED(buf[6] != SLJIT_W(0x123456789) * 3, "test10 case 8 failed\n");
 #endif
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1207,7 +1215,7 @@ static void test15(void)
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	//sljit_set_jump_addr(sljit_get_jump_addr(jump), SLJIT_FUNC_OFFSET(func));
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != -15, "test15 case 1 failed\n");
 	FAILED(buf[0] != 14, "test15 case 2 failed\n");
@@ -1218,7 +1226,7 @@ static void test15(void)
 	FAILED(buf[5] != 335, "test15 case 7 failed\n");
 	FAILED(buf[6] != -15, "test15 case 8 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1238,8 +1246,14 @@ static void test16(void)
 
 	FAILED(!compiler, "cannot create compiler\n");
 
+	// TODO(alex): fix this difference
+#ifdef SLJIT_CONFIG_LLVM
 	sljit_emit_enter(compiler, 0, 2, 3, 2, 0, 0, 0);
 	entry = sljit_emit_label(compiler);
+#else
+	entry = sljit_emit_label(compiler);
+	sljit_emit_enter(compiler, 0, 2, 3, 2, 0, 0, 0);
+#endif
 	/* If x == 0. */
 	sljit_emit_op2(compiler, SLJIT_SUB | SLJIT_SET_E, SLJIT_UNUSED, 0, SLJIT_S0, 0, SLJIT_IMM, 0);
 	jump1 = sljit_emit_jump(compiler, SLJIT_EQUAL);
@@ -1251,39 +1265,39 @@ static void test16(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_S0, 0);
 	sljit_emit_op2(compiler, SLJIT_SUB, SLJIT_R1, 0, SLJIT_S1, 0, SLJIT_IMM, 1);
 	jump = sljit_emit_jump(compiler, SLJIT_CALL2);
-	sljit_llvm_set_label(compiler, jump, entry);
+	SLJIT_SET_LABEL(jump, entry);
 
 	/* Returns with Ack(x-1, Ack(x,y-1)). */
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_RETURN_REG, 0);
 	sljit_emit_op2(compiler, SLJIT_SUB, SLJIT_R0, 0, SLJIT_S0, 0, SLJIT_IMM, 1);
 	jump = sljit_emit_jump(compiler, SLJIT_CALL2);
-	sljit_llvm_set_label(compiler, jump, entry);
+	SLJIT_SET_LABEL(jump, entry);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
 	/* Returns with y+1. */
 	label = sljit_emit_label(compiler);
-	sljit_llvm_set_label(compiler, jump1, label);
+	SLJIT_SET_LABEL(jump1, label);
 	sljit_emit_op2(compiler, SLJIT_ADD, SLJIT_RETURN_REG, 0, SLJIT_IMM, 1, SLJIT_S1, 0);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
 	/* Returns with Ack(x-1,1) */
 	label = sljit_emit_label(compiler);
-	sljit_llvm_set_label(compiler, jump2, label);
+	SLJIT_SET_LABEL(jump2, label);
 	sljit_emit_op2(compiler, SLJIT_SUB, SLJIT_R0, 0, SLJIT_S0, 0, SLJIT_IMM, 1);
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, 1);
 	jump = sljit_emit_jump(compiler, SLJIT_CALL2);
-	sljit_llvm_set_label(compiler, jump, entry);
+	SLJIT_SET_LABEL(jump, entry);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func2(3, 3) != 61, "test16 case 1 failed\n");
 	/* For benchmarking. */
 	/* FAILED(code.func2(3, 11) != 16381, "test16 case 1 failed\n"); */
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1317,7 +1331,7 @@ static void test17(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED((sljit_uw)buf[0] != 0x81818000, "test17 case 1 failed\n");
@@ -1326,7 +1340,7 @@ static void test17(void)
 	FAILED((sljit_uw)buf[3] != 0x81818c00, "test17 case 4 failed\n");
 	FAILED((sljit_uw)buf[4] != 0x81818fff, "test17 case 5 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1401,7 +1415,7 @@ static void test18(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 #if (defined SLJIT_64BIT_ARCHITECTURE && SLJIT_64BIT_ARCHITECTURE)
@@ -1434,7 +1448,7 @@ static void test18(void)
 	FAILED(buf[1] != 0x44332211, "test18 case 2 failed\n");
 #endif
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1474,7 +1488,7 @@ static void test19(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[0] != 10, "test19 case 1 failed\n");
@@ -1486,7 +1500,7 @@ static void test19(void)
 	FAILED(buf[6] != 12, "test19 case 7 failed\n");
 	FAILED(buf[7] != 10, "test19 case 8 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1535,7 +1549,7 @@ static void test20(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != -12345, "test20 case 1 failed\n")
 
@@ -1543,7 +1557,7 @@ static void test20(void)
 	FAILED(buf[3] != 17, "test20 case 3 failed\n");
 	FAILED(buf[4] != 7, "test20 case 4 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 
 	compiler = sljit_create_compiler();
 	sljit_emit_enter(compiler, 0, 0, 3, 0, 0, 0, SLJIT_MAX_LOCAL_SIZE);
@@ -1555,18 +1569,18 @@ static void test20(void)
 	sljit_emit_op1(compiler, SLJIT_MOVU, SLJIT_MEM1(SLJIT_R1), sizeof(sljit_sw), SLJIT_R2, 0);
 	sljit_emit_op2(compiler, SLJIT_SUB | SLJIT_SET_E, SLJIT_UNUSED, 0, SLJIT_R1, 0, SLJIT_R0, 0);
 	jump = sljit_emit_jump(compiler, SLJIT_NOT_EQUAL);
-	sljit_llvm_set_label(compiler, jump, label);
+	SLJIT_SET_LABEL(jump, label);
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	/* Just survive this code. */
 	code.func0();
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1710,7 +1724,7 @@ static void test22(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func3((sljit_sw)&buf, (sljit_sw)&sbuf, (sljit_sw)&bbuf);
 	FAILED(buf[1] != -13, "test22 case 1 failed\n");
@@ -1734,7 +1748,7 @@ static void test22(void)
 	FAILED(bbuf[3] != -56, "test22 case 17 failed\n");
 	FAILED(bbuf[4] != 2, "test22 case 18 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1815,7 +1829,7 @@ static void test23(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func2((sljit_sw)&buf, (sljit_sw)&ibuf) != -13, "test23 case 1 failed\n");
 	FAILED(buf[0] != -5791, "test23 case 2 failed\n");
@@ -1843,7 +1857,7 @@ static void test23(void)
 	FAILED(u.asbytes[3] != 0x78, "test23 case 16 failed\n");
 #endif
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -1937,7 +1951,7 @@ static void test24(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func3((sljit_sw)&buf, (sljit_sw)&sbuf, (sljit_sw)&bbuf);
 	FAILED(buf[2] != 176366, "test24 case 1 failed\n");
@@ -1960,7 +1974,7 @@ static void test24(void)
 	FAILED(bbuf[6] != -128, "test24 case 15 failed\n");
 #endif
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -2012,7 +2026,7 @@ static void test25(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[0] != 0, "test25 case 1 failed\n");
@@ -2030,7 +2044,7 @@ static void test25(void)
 	FAILED(buf[12] != SLJIT_W(0x07fff00080018001), "test25 case 13 failed\n");
 	FAILED(buf[13] != SLJIT_W(0x07fff00ffff00000), "test25 case 14 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 #endif
 	successful_tests++;
 }
@@ -2092,7 +2106,7 @@ static void test26(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func3((sljit_sw)&buf, (sljit_sw)&ibuf, (sljit_sw)&dbuf);
 
@@ -2107,7 +2121,7 @@ static void test26(void)
 		FAILED(dbuf[3] != -2.875, "test26 case 7 failed\n");
 	}
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -2261,7 +2275,7 @@ static void test27(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 
@@ -2310,7 +2324,7 @@ static void test27(void)
 	FAILED(buf[35] != 1, "test27 case 36 failed\n");
 	FAILED(buf[36] != 10, "test27 case 37 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 #undef SET_NEXT_BYTE
 #undef RESULT
@@ -2493,7 +2507,7 @@ static void test29(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[0] != 69, "test29 case 1 failed\n");
@@ -2530,7 +2544,7 @@ static void test29(void)
 
 	FAILED(buf[24] != -91, "test29 case 25 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -2589,12 +2603,12 @@ static void test30(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[0] != 9, "test30 case 1 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -2667,7 +2681,7 @@ static void test31(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 
@@ -2687,7 +2701,7 @@ static void test31(void)
 #endif
 	FAILED(buf[9] != -1541, "test31 case 10 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -2863,7 +2877,7 @@ static void test33(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 
@@ -2875,7 +2889,7 @@ static void test33(void)
 	FAILED(buf[5] != 0x125, "test33 case 6 failed\n");
 	FAILED(buf[6] != 1, "test33 case 7 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -3088,7 +3102,7 @@ static sljit_si cmp_test(struct sljit_compiler *compiler, sljit_si type, sljit_s
 	label = sljit_emit_label(compiler);
 	if (!label)
 		return compiler->error;
-	sljit_llvm_set_label(compiler, jump, label);
+	SLJIT_SET_LABEL(jump, label);
 	return SLJIT_SUCCESS;
 }
 
@@ -3199,7 +3213,7 @@ static void test36(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func2((sljit_sw)&buf, (sljit_sw)&data);
 
@@ -3209,7 +3223,7 @@ static void test36(void)
 			return;
 		}
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 #undef TEST_CASES
@@ -3289,7 +3303,7 @@ static void test37(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func2((sljit_sw)&buf, (sljit_sw)&ibuf);
 	FAILED(buf[0] != RESN(27), "test37 case 1 failed\n");
@@ -3320,7 +3334,7 @@ static void test37(void)
 	FAILED(buf[13] != 1, "test37 case 16 failed\n");
 	FAILED((buf[14] & 0xffffffff) != 0, "test37 case 17 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 #undef BITN
@@ -3357,7 +3371,7 @@ static void test38(void)
 	label = sljit_emit_label(compiler);
 	sljit_emit_op1(compiler, SLJIT_MOVU, SLJIT_MEM1(SLJIT_R0), sizeof(sljit_sw), SLJIT_IMM, -1);
 	jump = sljit_emit_cmp(compiler, SLJIT_LESS, SLJIT_R0, 0, SLJIT_R1, 0);
-	sljit_llvm_set_label(compiler, jump, label);
+	SLJIT_SET_LABEL(jump, label);
 
 	/* Grow stack. */
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_S0, 0);
@@ -3371,7 +3385,7 @@ static void test38(void)
 	label = sljit_emit_label(compiler);
 	sljit_emit_op1(compiler, SLJIT_MOVU, SLJIT_MEM1(SLJIT_R0), sizeof(sljit_sw), SLJIT_IMM, -1);
 	jump = sljit_emit_cmp(compiler, SLJIT_LESS, SLJIT_R0, 0, SLJIT_R1, 0);
-	sljit_llvm_set_label(compiler, jump, label);
+	SLJIT_SET_LABEL(jump, label);
 
 	/* Shrink stack. */
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_S0, 0);
@@ -3385,26 +3399,26 @@ static void test38(void)
 	label = sljit_emit_label(compiler);
 	sljit_emit_op1(compiler, SLJIT_MOVU, SLJIT_MEM1(SLJIT_R0), sizeof(sljit_sw), SLJIT_IMM, -1);
 	jump = sljit_emit_cmp(compiler, SLJIT_LESS, SLJIT_R0, 0, SLJIT_R1, 0);
-	sljit_llvm_set_label(compiler, jump, label);
+	SLJIT_SET_LABEL(jump, label);
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R0, 0, SLJIT_S0, 0);
 	sljit_emit_ijump(compiler, SLJIT_CALL1, SLJIT_IMM, SLJIT_FUNC_OFFSET(sljit_free_stack));
 
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0, SLJIT_IMM, 1);
 	label = sljit_emit_label(compiler);
-	sljit_llvm_set_label(compiler, alloc_fail, label);
-	sljit_llvm_set_label(compiler, alloc2_fail, label);
-	sljit_llvm_set_label(compiler, alloc3_fail, label);
+	SLJIT_SET_LABEL(alloc_fail, label);
+	SLJIT_SET_LABEL(alloc2_fail, label);
+	SLJIT_SET_LABEL(alloc3_fail, label);
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	/* Just survive this. */
 	FAILED(code.func0() != 1, "test38 case 1 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 #endif
 	successful_tests++;
 }
@@ -3530,7 +3544,7 @@ static void test40(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != 0xbaddead, "test40 case 1 failed\n");
 	FAILED(buf[0] != 0x123457, "test40 case 2 failed\n");
@@ -3544,7 +3558,7 @@ static void test40(void)
 	FAILED(buf[8] != 1, "test40 case 10 failed\n");
 	FAILED(buf[9] != 0x123457, "test40 case 11 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -3872,7 +3886,7 @@ static void test42(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 
@@ -3909,7 +3923,7 @@ static void test42(void)
 	FAILED(buf[17] != SLJIT_W(-47), "test42 case 18 failed\n");
 	FAILED(buf[18] != SLJIT_W(35949148), "test42 case 19 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -4023,7 +4037,7 @@ static void test44(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func1((sljit_sw)&buf) != (sljit_sw)(buf + 2), "test44 case 1 failed\n");
 	FAILED(buf[1] != buf + 2, "test44 case 2 failed\n");
@@ -4031,7 +4045,7 @@ static void test44(void)
 	FAILED(buf[3] != buf + 4, "test44 case 4 failed\n");
 	FAILED(buf[4] != buf + 2, "test44 case 5 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -4215,7 +4229,7 @@ static void test46(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func2((sljit_sw)&buf, (sljit_sw)&buf2);
 	FAILED(buf[0] != 0, "test46 case 1 failed\n");
@@ -4250,7 +4264,7 @@ static void test46(void)
 	FAILED(buf2[4] != -123, "test46 case 29 failed\n");
 	FAILED(buf2[5] != -14, "test46 case 30 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -4288,14 +4302,14 @@ static void test47(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[0] != 0x3a5c6f, "test47 case 1 failed\n");
 	FAILED(buf[1] != 0xd37c10, "test47 case 2 failed\n");
 	FAILED(buf[2] != 0x59b48e, "test47 case 3 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -4721,13 +4735,13 @@ static void test51(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func0();
 
 	FAILED(buf[1] != (39 * 5 * (SLJIT_NUMBER_OF_REGISTERS - 2)), "test51 case 1 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 
 	/* Next test. */
 
@@ -4747,7 +4761,7 @@ static void test51(void)
 
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_R0, 0);
 
-	sljit_llvm_set_label(compiler, jump, sljit_emit_label(compiler));
+	SLJIT_SET_LABEL(jump, sljit_emit_label(compiler));
 	sljit_emit_enter(compiler, 0, 0, SLJIT_NUMBER_OF_REGISTERS, 0, 0, 0, 0);
 	for (i = 0; i < SLJIT_NUMBER_OF_REGISTERS; i++)
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R(i), 0, SLJIT_IMM, 35);
@@ -4755,11 +4769,11 @@ static void test51(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func0() != (SLJIT_NUMBER_OF_SCRATCH_REGISTERS * 35 + SLJIT_NUMBER_OF_SAVED_REGISTERS * 17), "test51 case 2 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 
 	/* Next test. */
 
@@ -4779,7 +4793,7 @@ static void test51(void)
 
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_R0, 0);
 
-	sljit_llvm_set_label(compiler, jump, sljit_emit_label(compiler));
+	SLJIT_SET_LABEL(jump, sljit_emit_label(compiler));
 	sljit_emit_enter(compiler, 0, 0, 0, SLJIT_NUMBER_OF_REGISTERS, 0, 0, 0);
 	for (i = 0; i < SLJIT_NUMBER_OF_REGISTERS; i++)
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S(i), 0, SLJIT_IMM, 43);
@@ -4787,11 +4801,11 @@ static void test51(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	FAILED(code.func0() != (SLJIT_NUMBER_OF_SCRATCH_REGISTERS * 43 + SLJIT_NUMBER_OF_SAVED_REGISTERS * 68), "test51 case 3 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -4907,13 +4921,13 @@ static void test53(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 
 	FAILED((buf[0] & (sizeof(sljit_d) - 1)) != 0, "test53 case 1 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 
 	/* Next test. */
 
@@ -4931,13 +4945,13 @@ static void test53(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 
 	FAILED((buf[0] & (sizeof(sljit_d) - 1)) != 0, "test53 case 2 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -4975,7 +4989,7 @@ static void test54(void)
 
 	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
-	sljit_free_llvm_compiler(compiler);
+	sljit_free_compiler(compiler);
 
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[0] != 1, "test54 case 1 failed\n");
@@ -4985,7 +4999,7 @@ static void test54(void)
 	FAILED(buf[4] != 1, "test54 case 5 failed\n");
 	FAILED(buf[5] != 0, "test54 case 6 failed\n");
 
-	sljit_llvm_free_code(compiler);
+	SLJIT_FREE_CODE();
 	successful_tests++;
 }
 
@@ -5011,8 +5025,10 @@ void sljit_test(int argc, char* argv[])
 	test8();
 	test9();
 	test10();
-	//test11();
-	//test12();
+#ifndef SLJIT_CONFIG_LLVM
+	test11();
+	test12();
+#endif
 	test13();
 	test14();
 	test15();
@@ -5021,27 +5037,37 @@ void sljit_test(int argc, char* argv[])
 	test18();
 	test19();
 	test20();
-	//test21();
+#ifndef SLJIT_CONFIG_LLVM
+	test21();
+#endif
 	test22();
 	test23();
 	test24();
 	test25();
 	test26();
 	test27();
-	//test28();
+#ifndef SLJIT_CONFIG_LLVM
+	test28();
+#endif
 	test29();
 	test30();
 	test31();
 	test32();
 	test33();
-	//test34();
-	//test35();
+#ifndef SLJIT_CONFIG_LLVM
+	test34();
+	test35();
+#endif
 	test36();
 	test37();
 	test38();
-	//test39();
+#ifndef SLJIT_CONFIG_LLVM
+	test39();
+#endif
 	test40();
-	//test41();
+#ifndef SLJIT_CONFIG_LLVM
+	test41();
+#endif
 	test42();
 	test43();
 	test44();
@@ -5051,7 +5077,9 @@ void sljit_test(int argc, char* argv[])
 	test48();
 	test49();
 	test50();
-	//test51();
+#ifndef SLJIT_CONFIG_LLVM
+	test51();
+#endif
 	test52();
 	test53();
 	test54();
@@ -5059,7 +5087,11 @@ void sljit_test(int argc, char* argv[])
 	sljit_free_unused_memory_exec();
 #endif
 
+#ifdef SLJIT_CONFIG_LLVM
 #	define TEST_COUNT 45
+#else
+#	define TEST_COUNT 54
+#endif
 
 	printf("SLJIT tests: ");
 	if (successful_tests == TEST_COUNT)

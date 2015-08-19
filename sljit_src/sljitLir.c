@@ -424,6 +424,25 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler(void)
 }
 #endif
 
+#ifdef SLJIT_CONFIG_LLVM
+void sljit_free_llvm_compiler_impl(struct sljit_compiler *compiler);
+
+SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compiler)
+{
+	sljit_free_llvm_compiler_impl(compiler);
+#if (defined SLJIT_CONFIG_ARM_V5 && SLJIT_CONFIG_ARM_V5)
+	SLJIT_FREE(compiler->cpool);
+#endif
+	SLJIT_FREE(compiler);
+}
+
+void sljit_llvm_free_code_impl(struct sljit_compiler *compiler);
+
+SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_free_code(struct sljit_compiler *compiler)
+{
+	sljit_llvm_free_code_impl(compiler);
+}
+#else
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compiler)
 {
 	struct sljit_memory_fragment *buf;
@@ -448,24 +467,7 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compile
 #endif
 	SLJIT_FREE(compiler);
 }
-
-void sljit_free_llvm_compiler_impl(struct sljit_compiler *compiler);
-
-SLJIT_API_FUNC_ATTRIBUTE void sljit_free_llvm_compiler(struct sljit_compiler *compiler)
-{
-	sljit_free_llvm_compiler_impl(compiler);
-#if (defined SLJIT_CONFIG_ARM_V5 && SLJIT_CONFIG_ARM_V5)
-	SLJIT_FREE(compiler->cpool);
 #endif
-	SLJIT_FREE(compiler);
-}
-
-void sljit_llvm_free_code_impl(struct sljit_compiler *compiler);
-
-SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_free_code(struct sljit_compiler *compiler)
-{
-	sljit_llvm_free_code_impl(compiler);
-}
 
 #if (defined SLJIT_CONFIG_ARM_THUMB2 && SLJIT_CONFIG_ARM_THUMB2)
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code)
@@ -489,7 +491,9 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code)
 
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_label(struct sljit_jump *jump, struct sljit_label* label)
 {
+#ifdef SLJIT_CONFIG_LLVM
 	SLJIT_ASSERT(0);
+#endif
 	if (SLJIT_LIKELY(!!jump) && SLJIT_LIKELY(!!label)) {
 		jump->flags &= ~JUMP_ADDR;
 		jump->flags |= JUMP_LABEL;
@@ -1574,7 +1578,11 @@ static SLJIT_INLINE sljit_si emit_mov_before_return(struct sljit_compiler *compi
 #define SLJIT_CPUINFO SLJIT_CPUINFO_PART1 SLJIT_CPUINFO_PART2 SLJIT_CPUINFO_PART3
 
 #if (defined SLJIT_CONFIG_X86 && SLJIT_CONFIG_X86)
+#ifdef SLJIT_CONFIG_LLVM
 #	include "sljitLLVM.c"
+#else
+#	include "sljitNativeX86_common.c"
+#endif
 #elif (defined SLJIT_CONFIG_ARM_V5 && SLJIT_CONFIG_ARM_V5)
 #	include "sljitNativeARM_32.c"
 #elif (defined SLJIT_CONFIG_ARM_V7 && SLJIT_CONFIG_ARM_V7)
