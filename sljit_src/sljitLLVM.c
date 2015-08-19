@@ -32,11 +32,6 @@ SLJIT_API_FUNC_ATTRIBUTE SLJIT_CONST char* sljit_get_platform_name(void)
 	return "LLVM" SLJIT_CPUINFO;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compiler)
-{
-	SLJIT_ASSERT(0);
-}
-
 static LLVMValueRef llvm_flag_e(const struct sljit_compiler* compiler) {
 	LLVMValueRef flag_idx_lv = LLVMConstInt(LLVMInt32Type(), 0, 0);
 	return LLVMBuildGEP(
@@ -110,7 +105,7 @@ static LLVMValueRef ll_i64(const sljit_sw val)
 	return ll_int(val, 64);
 }
 
-SLJIT_API_FUNC_ATTRIBUTE void* sljit_llvm_generate_code(struct sljit_compiler *compiler)
+SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compiler)
 {
 	char *error = NULL;
 	LLVMValueRef func = LLVMGetFirstFunction(compiler->llvm_module);

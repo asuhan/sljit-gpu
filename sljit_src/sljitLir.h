@@ -439,12 +439,6 @@ struct sljit_compiler {
    Returns NULL if failed. */
 SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler(void);
 
-#ifdef SLJIT_CONFIG_LLVM
-/* Creates an sljit LLVM compiler.
-   Returns NULL if failed. */
-SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_llvm_compiler();
-#endif
-
 /* Free everything except the compiled machine code. */
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compiler);
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_llvm_compiler(struct sljit_compiler *compiler);
@@ -477,7 +471,6 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_compiler_verbose(struct sljit_compiler *comp
 SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compiler);
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code);
 
-SLJIT_API_FUNC_ATTRIBUTE void* sljit_llvm_generate_code(struct sljit_compiler *compiler);
 SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_free_code(struct sljit_compiler *compiler);
 
 /*

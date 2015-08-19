@@ -1908,7 +1908,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 	compiler_common.machine = (struct regex_machine*)SLJIT_MALLOC(sizeof(struct regex_machine) + (compiler_common.terms_size - 1) * sizeof(sljit_uw));
 	CHECK(!compiler_common.machine);
 
-	compiler_common.compiler = sljit_create_llvm_compiler();
+	compiler_common.compiler = sljit_create_compiler();
 	CHECK(!compiler_common.compiler);
 
 	if (compiler_common.longest_range_size > 0) {
@@ -2261,7 +2261,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 		}
 		CHECK(sljit_emit_return(compiler_common.compiler, SLJIT_MOV, R_NEXT_HEAD, 0));
 
-		compiler_common.machine->continue_match = sljit_llvm_generate_code(compiler_common.compiler);
+		compiler_common.machine->continue_match = sljit_generate_code(compiler_common.compiler);
 #ifndef SLJIT_INDIRECT_CALL
 		compiler_common.machine->u.init_match = (void*)(sljit_sw)sljit_get_label_addr(label);
 #else

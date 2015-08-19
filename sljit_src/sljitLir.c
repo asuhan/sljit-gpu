@@ -326,17 +326,22 @@ static void init_compiler(void);
 #endif
 
 #ifdef SLJIT_CONFIG_LLVM
-SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_llvm_compiler()
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler()
 {
 	struct sljit_compiler *compiler = (struct sljit_compiler*)SLJIT_MALLOC(sizeof(struct sljit_compiler));
 	if (!compiler)
 		return NULL;
 	SLJIT_ZEROMEM(compiler, sizeof(struct sljit_compiler));
 	compiler->llvm_module = LLVMModuleCreateWithName("sljit");
+#if (defined SLJIT_NEEDS_COMPILER_INIT && SLJIT_NEEDS_COMPILER_INIT)
+	if (!compiler_initialized) {
+		init_compiler();
+		compiler_initialized = 1;
+	}
+#endif
 	return compiler;
 }
-#endif
-
+#else
 SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler(void)
 {
 	struct sljit_compiler *compiler = (struct sljit_compiler*)SLJIT_MALLOC(sizeof(struct sljit_compiler));
@@ -417,6 +422,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler(void)
 
 	return compiler;
 }
+#endif
 
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compiler)
 {

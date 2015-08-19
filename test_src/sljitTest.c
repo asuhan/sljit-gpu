@@ -146,7 +146,7 @@ static void test1(void)
 	executable_code code;
 	struct sljit_jump* jump1 = NULL;
 	struct sljit_label* label1 = NULL;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 
 	if (verbose)
 		printf("Run test1\n");
@@ -162,7 +162,7 @@ static void test1(void)
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_S0, 0);
 
 	SLJIT_ASSERT(sljit_get_generated_code_size(compiler) == 0);
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	SLJIT_ASSERT(compiler->error == SLJIT_ERR_COMPILED);
 	SLJIT_ASSERT(sljit_get_generated_code_size(compiler) > 0);
@@ -179,7 +179,7 @@ static void test2(void)
 {
 	/* Test mov. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[8];
 	static sljit_sw data[2] = { 0, -9876 };
 
@@ -220,7 +220,7 @@ static void test2(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_R1), -0xff890, SLJIT_R0, 0);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_R2, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -241,7 +241,7 @@ static void test3(void)
 {
 	/* Test not. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[5];
 
 	if (verbose)
@@ -265,7 +265,7 @@ static void test3(void)
 	sljit_emit_op1(compiler, SLJIT_NOT, SLJIT_MEM1(SLJIT_R1), 0xff0000 + 0x20, SLJIT_MEM1(SLJIT_R2), 0xff0000);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -282,7 +282,7 @@ static void test4(void)
 {
 	/* Test neg. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[4];
 
 	if (verbose)
@@ -302,7 +302,7 @@ static void test4(void)
 	sljit_emit_op1(compiler, SLJIT_NEG, SLJIT_MEM1(SLJIT_S0), sizeof(sljit_sw) * 3, SLJIT_IMM, 299);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -319,7 +319,7 @@ static void test5(void)
 {
 	/* Test add. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[9];
 
 	if (verbose)
@@ -364,7 +364,7 @@ static void test5(void)
 
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_R0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -386,7 +386,7 @@ static void test6(void)
 {
 	/* Test addc, sub, subc. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[10];
 
 	if (verbose)
@@ -438,7 +438,7 @@ static void test6(void)
 	sljit_emit_op2(compiler, SLJIT_SUB, SLJIT_RETURN_REG, 0, SLJIT_RETURN_REG, 0, SLJIT_IMM, -2220);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -462,7 +462,7 @@ static void test7(void)
 {
 	/* Test logical operators. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[8];
 
 	if (verbose)
@@ -499,7 +499,7 @@ static void test7(void)
 	sljit_emit_op2(compiler, SLJIT_AND, SLJIT_RETURN_REG, 0, SLJIT_IMM, 0x888888, SLJIT_R1, 0);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -521,7 +521,7 @@ static void test8(void)
 {
 	/* Test flags (neg, cmp, test). */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[13];
 
 	if (verbose)
@@ -583,7 +583,7 @@ static void test8(void)
 	sljit_emit_op_flags(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_S0), sizeof(sljit_sw) * 12, SLJIT_UNUSED, 0, SLJIT_OVERFLOW);
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -609,7 +609,7 @@ static void test9(void)
 {
 	/* Test shift. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[13];
 
 	if (verbose)
@@ -709,7 +709,7 @@ static void test9(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -736,7 +736,7 @@ static void test10(void)
 {
 	/* Test multiplications. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[7];
 
 	if (verbose)
@@ -776,7 +776,7 @@ static void test10(void)
 	sljit_emit_op2(compiler, SLJIT_MUL, SLJIT_RETURN_REG, 0, SLJIT_IMM, 11, SLJIT_IMM, 10);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1142,7 +1142,7 @@ static void test15(void)
 {
 	/* Test function call. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[7];
 
 	if (verbose)
@@ -1204,7 +1204,7 @@ static void test15(void)
 
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	//sljit_set_jump_addr(sljit_get_jump_addr(jump), SLJIT_FUNC_OFFSET(func));
 	sljit_free_llvm_compiler(compiler);
@@ -1226,7 +1226,7 @@ static void test16(void)
 {
 	/* Ackermann benchmark. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	struct sljit_label *entry;
 	struct sljit_label *label;
 	struct sljit_jump *jump;
@@ -1275,7 +1275,7 @@ static void test16(void)
 	sljit_llvm_set_label(compiler, jump, entry);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1291,7 +1291,7 @@ static void test17(void)
 {
 	/* Test arm constant pool. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_si i;
 	sljit_sw buf[5];
 
@@ -1315,7 +1315,7 @@ static void test17(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_S0), 4 * sizeof(sljit_sw), SLJIT_R0, 0);
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1334,7 +1334,7 @@ static void test18(void)
 {
 	/* Test 64 bit. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[11];
 
 	if (verbose)
@@ -1399,7 +1399,7 @@ static void test18(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1442,7 +1442,7 @@ static void test19(void)
 {
 	/* Test arm partial instruction caching. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[10];
 
 	if (verbose)
@@ -1472,7 +1472,7 @@ static void test19(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1494,7 +1494,7 @@ static void test20(void)
 {
 	/* Test stack. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	struct sljit_jump* jump;
 	struct sljit_label* label;
 	sljit_sw buf[6];
@@ -1533,7 +1533,7 @@ static void test20(void)
 	sljit_emit_const(compiler, SLJIT_R0, 0, -9);
 	sljit_emit_label(compiler);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1545,7 +1545,7 @@ static void test20(void)
 
 	sljit_llvm_free_code(compiler);
 
-	compiler = sljit_create_llvm_compiler();
+	compiler = sljit_create_compiler();
 	sljit_emit_enter(compiler, 0, 0, 3, 0, 0, 0, SLJIT_MAX_LOCAL_SIZE);
 
 	sljit_get_local_base(compiler, SLJIT_R0, 0, SLJIT_MAX_LOCAL_SIZE - sizeof(sljit_sw));
@@ -1559,7 +1559,7 @@ static void test20(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1632,7 +1632,7 @@ static void test22(void)
 {
 	/* Test simple byte and half-int data transfers. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[9];
 	sljit_sh sbuf[7];
 	sljit_sb bbuf[5];
@@ -1708,7 +1708,7 @@ static void test22(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1743,7 +1743,7 @@ static void test23(void)
 	/* Test 32 bit / 64 bit signed / unsigned int transfer and conversion.
 	   This test has do real things on 64 bit systems, but works on 32 bit systems as well. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[9];
 	sljit_si ibuf[5];
 	union {
@@ -1813,7 +1813,7 @@ static void test23(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R1, 0, SLJIT_IMM, 0x2bd700 | 243);
 	sljit_emit_return(compiler, SLJIT_MOV_SB, SLJIT_R1, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1851,7 +1851,7 @@ static void test24(void)
 {
 	/* Some complicated addressing modes. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[9];
 	sljit_sh sbuf[5];
 	sljit_sb bbuf[7];
@@ -1935,7 +1935,7 @@ static void test24(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -1969,7 +1969,7 @@ static void test25(void)
 #if (defined SLJIT_64BIT_ARCHITECTURE && SLJIT_64BIT_ARCHITECTURE)
 	/* 64 bit loads. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[14];
 
 	if (verbose)
@@ -2010,7 +2010,7 @@ static void test25(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -2039,7 +2039,7 @@ static void test26(void)
 {
 	/* Aligned access without aligned offsets. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[4];
 	sljit_si ibuf[4];
 	sljit_d dbuf[4];
@@ -2090,7 +2090,7 @@ static void test26(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -2124,7 +2124,7 @@ static void test27(void)
 
 	/* Playing with conditional flags. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sb buf[37];
 	sljit_si i;
 
@@ -2259,7 +2259,7 @@ static void test27(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -2376,7 +2376,7 @@ static void test29(void)
 {
 	/* Test signed/unsigned bytes and halfs. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[25];
 
 	if (verbose)
@@ -2491,7 +2491,7 @@ static void test29(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -2538,7 +2538,7 @@ static void test30(void)
 {
 	/* Test unused results. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[1];
 
 	if (verbose)
@@ -2587,7 +2587,7 @@ static void test30(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -2602,7 +2602,7 @@ static void test31(void)
 {
 	/* Integer mul and set flags. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[12];
 #if (defined SLJIT_64BIT_ARCHITECTURE && SLJIT_64BIT_ARCHITECTURE)
 	sljit_sw big_word = SLJIT_W(0x7fffffff00000000);
@@ -2665,7 +2665,7 @@ static void test31(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -2808,7 +2808,7 @@ static void test33(void)
 {
 	/* Test keep flags. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[7];
 #if (defined SLJIT_64BIT_ARCHITECTURE && SLJIT_64BIT_ARCHITECTURE)
 	sljit_sw big_word = SLJIT_W(0x8000000000000003);
@@ -2861,7 +2861,7 @@ static void test33(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -3097,7 +3097,7 @@ static void test36(void)
 {
 	/* Compare instruction. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 
 	sljit_sb buf[TEST_CASES];
 	sljit_sb compare_buf[TEST_CASES] = {
@@ -3197,7 +3197,7 @@ static void test36(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -3226,7 +3226,7 @@ static void test37(void)
 {
 	/* Test count leading zeroes. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[15];
 	sljit_si ibuf[2];
 	sljit_si i;
@@ -3287,7 +3287,7 @@ static void test37(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -3331,7 +3331,7 @@ static void test38(void)
 #if (defined SLJIT_UTIL_STACK && SLJIT_UTIL_STACK)
 	/* Test stack utility. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	struct sljit_jump* alloc_fail;
 	struct sljit_jump* alloc2_fail;
 	struct sljit_jump* alloc3_fail;
@@ -3397,7 +3397,7 @@ static void test38(void)
 	sljit_llvm_set_label(compiler, alloc3_fail, label);
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -3458,7 +3458,7 @@ static void test40(void)
 {
 	/* Test emit_op_flags. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[10];
 
 	if (verbose)
@@ -3528,7 +3528,7 @@ static void test40(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_SP), 0, SLJIT_IMM, 0xbaddead);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_SP), 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -3760,7 +3760,7 @@ static void test42(void)
 {
 	/* Test long multiply and division. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_si i;
 	sljit_sw buf[7 + 8 + 4];
 
@@ -3870,7 +3870,7 @@ static void test42(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -3992,7 +3992,7 @@ static void test44(void)
 {
 	/* Test mov. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	void *buf[5];
 
 	if (verbose)
@@ -4021,7 +4021,7 @@ static void test44(void)
 
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_R0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -4153,7 +4153,7 @@ static void test46(void)
 	/* Test sljit_emit_op_flags with 32 bit operations. */
 
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_si buf[24];
 	sljit_sw buf2[6];
 	sljit_si i;
@@ -4213,7 +4213,7 @@ static void test46(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -4258,7 +4258,7 @@ static void test47(void)
 {
 	/* Test jump optimizations. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[3];
 
 	if (verbose)
@@ -4286,7 +4286,7 @@ static void test47(void)
 	sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_S0), 2 * sizeof(sljit_sw), SLJIT_R0, 0);
 	sljit_emit_return(compiler, SLJIT_MOV, SLJIT_RETURN_REG, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -4670,7 +4670,7 @@ static void test51(void)
 {
 	/* Test all registers provided by the CPU. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	struct sljit_jump* jump;
 	sljit_sw buf[2];
 	sljit_si i;
@@ -4719,7 +4719,7 @@ static void test51(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -4731,7 +4731,7 @@ static void test51(void)
 
 	/* Next test. */
 
-	compiler = sljit_create_llvm_compiler();
+	compiler = sljit_create_compiler();
 
 	FAILED(!compiler, "cannot create compiler\n");
 
@@ -4753,7 +4753,7 @@ static void test51(void)
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_R(i), 0, SLJIT_IMM, 35);
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -4763,7 +4763,7 @@ static void test51(void)
 
 	/* Next test. */
 
-	compiler = sljit_create_llvm_compiler();
+	compiler = sljit_create_compiler();
 
 	FAILED(!compiler, "cannot create compiler\n");
 
@@ -4785,7 +4785,7 @@ static void test51(void)
 		sljit_emit_op1(compiler, SLJIT_MOV, SLJIT_S(i), 0, SLJIT_IMM, 43);
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -4889,7 +4889,7 @@ static void test53(void)
 {
 	/* Check SLJIT_DOUBLE_ALIGNMENT. */
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[1];
 
 	if (verbose)
@@ -4905,7 +4905,7 @@ static void test53(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -4917,7 +4917,7 @@ static void test53(void)
 
 	/* Next test. */
 
-	compiler = sljit_create_llvm_compiler();
+	compiler = sljit_create_compiler();
 	FAILED(!compiler, "cannot create compiler\n");
 	buf[0] = -1;
 
@@ -4929,7 +4929,7 @@ static void test53(void)
 
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
@@ -4944,7 +4944,7 @@ static void test53(void)
 static void test54(void)
 {
 	executable_code code;
-	struct sljit_compiler* compiler = sljit_create_llvm_compiler();
+	struct sljit_compiler* compiler = sljit_create_compiler();
 	sljit_sw buf[6];
 
 	if (verbose)
@@ -4973,7 +4973,7 @@ static void test54(void)
 	sljit_emit_op_flags(compiler, SLJIT_MOV, SLJIT_MEM1(SLJIT_S0), 5 * sizeof(sljit_sw), SLJIT_UNUSED, 0, SLJIT_SIG_LESS);
 	sljit_emit_return(compiler, SLJIT_UNUSED, 0, 0);
 
-	code.code = sljit_llvm_generate_code(compiler);
+	code.code = sljit_generate_code(compiler);
 	CHECK(compiler);
 	sljit_free_llvm_compiler(compiler);
 
