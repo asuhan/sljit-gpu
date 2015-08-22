@@ -222,7 +222,6 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_enter(struct sljit_compiler *compil
 	}
 	LLVMTypeRef fn_type = LLVMFunctionType(LLVMInt64Type(), param_types, args, 0);
 	compiler->llvm_func = LLVMAddFunction(compiler->llvm_module, "anon_func", fn_type);
-	compiler->llvm_builder = LLVMCreateBuilder();
 
 	LLVMBasicBlockRef entry = LLVMAppendBasicBlock(compiler->llvm_func, "entry");
 	LLVMPositionBuilderAtEnd(compiler->llvm_builder, entry);

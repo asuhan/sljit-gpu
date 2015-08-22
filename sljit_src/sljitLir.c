@@ -333,6 +333,8 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler()
 		return NULL;
 	SLJIT_ZEROMEM(compiler, sizeof(struct sljit_compiler));
 	compiler->llvm_module = LLVMModuleCreateWithName("sljit");
+	compiler->llvm_builder = LLVMCreateBuilder();
+	compiler->llvm_func = NULL;
 #if (defined SLJIT_NEEDS_COMPILER_INIT && SLJIT_NEEDS_COMPILER_INIT)
 	if (!compiler_initialized) {
 		init_compiler();
