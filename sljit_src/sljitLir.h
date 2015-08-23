@@ -411,7 +411,8 @@ struct sljit_compiler {
 	LLVMExecutionEngineRef llvm_engine;
 	LLVMValueRef llvm_regs;
 	LLVMValueRef llvm_flags;
-        void* llvm_native_code;
+        void *llvm_native_code;
+        struct sljit_label *llvm_pending_label;
 #endif
 
 #if (defined SLJIT_VERBOSE && SLJIT_VERBOSE)

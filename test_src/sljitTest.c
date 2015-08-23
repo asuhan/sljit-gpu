@@ -1246,14 +1246,8 @@ static void test16(void)
 
 	FAILED(!compiler, "cannot create compiler\n");
 
-	// TODO(alex): fix this difference
-#ifdef SLJIT_CONFIG_LLVM
-	sljit_emit_enter(compiler, 0, 2, 3, 2, 0, 0, 0);
-	entry = sljit_emit_label(compiler);
-#else
 	entry = sljit_emit_label(compiler);
 	sljit_emit_enter(compiler, 0, 2, 3, 2, 0, 0, 0);
-#endif
 	/* If x == 0. */
 	sljit_emit_op2(compiler, SLJIT_SUB | SLJIT_SET_E, SLJIT_UNUSED, 0, SLJIT_S0, 0, SLJIT_IMM, 0);
 	jump1 = sljit_emit_jump(compiler, SLJIT_EQUAL);

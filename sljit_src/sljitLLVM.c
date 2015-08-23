@@ -210,6 +210,33 @@ static void reg_write(LLVMValueRef reg, LLVMValueRef val, struct sljit_compiler 
 	LLVMBuildStore(compiler->llvm_builder, val, reg);
 }
 
+static void emit_label_deferred(struct sljit_label *label, struct sljit_compiler *compiler) {
+	LLVMValueRef cont_args[2];
+
+	cont_args[0] = compiler->llvm_regs;
+	cont_args[1] = compiler->llvm_flags;
+
+	LLVMValueRef cont_func = label->addr;
+
+	LLVMBasicBlockRef current_bb = LLVMGetInsertBlock(compiler->llvm_builder);
+	SLJIT_ASSERT(current_bb);
+	if (!LLVMGetBasicBlockTerminator(current_bb)) {
+	  LLVMBuildRet(
+		  compiler->llvm_builder,
+		  LLVMBuildCall(
+			compiler->llvm_builder,
+			cont_func,
+			cont_args,
+			2,
+			"call_label_cont"));
+	}
+	LLVMPositionBuilderAtEnd(compiler->llvm_builder, LLVMGetEntryBasicBlock(cont_func));
+
+	compiler->llvm_regs = LLVMGetParam(cont_func, 0);
+	compiler->llvm_flags = LLVMGetParam(cont_func, 1);
+	compiler->llvm_func = cont_func;
+}
+
 SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_enter(struct sljit_compiler *compiler,
 	sljit_si options, sljit_si args, sljit_si scratches, sljit_si saveds,
 	sljit_si fscratches, sljit_si fsaveds, sljit_si local_size)
@@ -257,6 +284,10 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_enter(struct sljit_compiler *compil
 			0);
 	}
 
+	if (compiler->llvm_pending_label) {
+		emit_label_deferred(compiler->llvm_pending_label, compiler);
+		compiler->llvm_pending_label = NULL;
+	}
 	return SLJIT_SUCCESS;
 }
 
@@ -902,31 +933,18 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_label* sljit_emit_label(struct sljit_compi
 {
 	struct sljit_label *label = NULL;
 	LLVMValueRef cont_func = create_cont_function(compiler->llvm_module, 0);
-	LLVMValueRef cont_args[2];
-
-	cont_args[0] = compiler->llvm_regs;
-	cont_args[1] = compiler->llvm_flags;
 
 	label = malloc(sizeof(struct sljit_label));
 	PTR_FAIL_IF(!label);
 
-	LLVMBasicBlockRef current_bb = LLVMGetInsertBlock(compiler->llvm_builder);
-	if (!LLVMGetBasicBlockTerminator(current_bb)) {
-	  LLVMBuildRet(
-		  compiler->llvm_builder,
-		  LLVMBuildCall(
-			compiler->llvm_builder,
-			cont_func,
-			cont_args,
-			2,
-			"call_label_cont"));
-	}
-	LLVMPositionBuilderAtEnd(compiler->llvm_builder, LLVMGetEntryBasicBlock(cont_func));
 	label->addr = cont_func;
 
-	compiler->llvm_regs = LLVMGetParam(cont_func, 0);
-	compiler->llvm_flags = LLVMGetParam(cont_func, 1);
-	compiler->llvm_func = cont_func;
+	if (!compiler->llvm_func) {
+		SLJIT_ASSERT(!compiler->llvm_pending_label);
+		compiler->llvm_pending_label = label;
+	} else {
+		emit_label_deferred(label, compiler);
+	}
 
 	return label;
 }
@@ -1283,7 +1301,6 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_const* sljit_emit_const(struct sljit_compi
 
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_jump_addr(sljit_uw addr, sljit_uw new_addr)
 {
-
 	SLJIT_ASSERT(0);
 }
 

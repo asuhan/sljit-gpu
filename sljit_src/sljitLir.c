@@ -335,6 +335,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_compiler* sljit_create_compiler()
 	compiler->llvm_module = LLVMModuleCreateWithName("sljit");
 	compiler->llvm_builder = LLVMCreateBuilder();
 	compiler->llvm_func = NULL;
+	compiler->llvm_pending_label = NULL;
 #if (defined SLJIT_NEEDS_COMPILER_INIT && SLJIT_NEEDS_COMPILER_INIT)
 	if (!compiler_initialized) {
 		init_compiler();
