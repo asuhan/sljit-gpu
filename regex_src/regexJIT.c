@@ -1720,7 +1720,7 @@ static int compile_newline_check(struct compiler_common *compiler_common, sljit_
 	if (SLJIT_UNLIKELY(exp)) \
 		return 0
 
-static SLJIT_INLINE void range_set_label(struct sljit_compiler *compiler, struct sljit_jump **range_jump_list, struct sljit_label *label)
+static SLJIT_INLINE void range_set_label(struct sljit_jump **range_jump_list, struct sljit_label *label)
 {
 	while (*range_jump_list) {
 		sljit_set_label(*range_jump_list, label);
@@ -1780,7 +1780,7 @@ static sljit_sw compile_range_check(struct compiler_common *compiler_common, slj
 		CHECK(sljit_emit_ijump(compiler, SLJIT_JUMP, SLJIT_MEM2(R_CURR_STATE, R_TEMP), 0));
 
 		EMIT_LABEL(label);
-		range_set_label(compiler_common->compiler, compiler_common->range_jump_list, label);
+		range_set_label(compiler_common->range_jump_list, label);
 		/* Clears the jump list. */
 		*compiler_common->range_jump_list = NULL;
 	}
@@ -2217,7 +2217,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 			}
 			else if (compiler_common.dfa_transitions[ind].type == type_rng_end) {
 				EMIT_LABEL(label);
-				range_set_label(compiler_common.compiler, compiler_common.range_jump_list, label);
+				range_set_label(compiler_common.range_jump_list, label);
 			}
 			else {
 				SLJIT_ASSERT(compiler_common.dfa_transitions[ind].type == type_newline);
