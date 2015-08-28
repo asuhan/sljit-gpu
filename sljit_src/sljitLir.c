@@ -495,13 +495,20 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code)
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_label(struct sljit_jump *jump, struct sljit_label* label)
 {
 #ifdef SLJIT_CONFIG_LLVM
-	SLJIT_ASSERT(0);
-#endif
+	LLVMBasicBlockRef saved = LLVMGetInsertBlock(label->llvm_builder);
+	LLVMPositionBuilderAtEnd(label->llvm_builder, LLVMGetEntryBasicBlock(jump->addr));
+	LLVMValueRef cont_args[2];
+	cont_args[0] = LLVMGetParam(jump->addr, 0);
+	cont_args[1] = LLVMGetParam(jump->addr, 1);
+	LLVMBuildRet(label->llvm_builder, LLVMBuildCall(label->llvm_builder, label->addr, cont_args, 2, "call_cont_label"));
+	LLVMPositionBuilderAtEnd(label->llvm_builder, saved);
+#else
 	if (SLJIT_LIKELY(!!jump) && SLJIT_LIKELY(!!label)) {
 		jump->flags &= ~JUMP_ADDR;
 		jump->flags |= JUMP_LABEL;
 		jump->u.label = label;
 	}
+#endif
 }
 
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_target(struct sljit_jump *jump, sljit_uw target)

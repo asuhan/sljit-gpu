@@ -938,6 +938,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_label* sljit_emit_label(struct sljit_compi
 	PTR_FAIL_IF(!label);
 
 	label->addr = cont_func;
+	label->llvm_builder = compiler->llvm_builder;
 
 	if (!compiler->llvm_func) {
 		SLJIT_ASSERT(!compiler->llvm_pending_label);
@@ -1156,16 +1157,6 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_jump(struct sljit_compile
 	set_jump(jump, compiler, type & SLJIT_REWRITABLE_JUMP);
 	jump->addr = (stub_func ? stub_func : cont_func);
 	return jump;
-}
-
-SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_set_label(struct sljit_compiler *compiler, struct sljit_jump *jump, struct sljit_label* label) {
-	LLVMBasicBlockRef saved = LLVMGetInsertBlock(compiler->llvm_builder);
-	LLVMPositionBuilderAtEnd(compiler->llvm_builder, LLVMGetEntryBasicBlock(jump->addr));
-	LLVMValueRef cont_args[2];
-	cont_args[0] = LLVMGetParam(jump->addr, 0);
-	cont_args[1] = LLVMGetParam(jump->addr, 1);
-	LLVMBuildRet(compiler->llvm_builder, LLVMBuildCall(compiler->llvm_builder, label->addr, cont_args, 2, "call_cont_label"));
-	LLVMPositionBuilderAtEnd(compiler->llvm_builder, saved);
 }
 
 SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_ijump(struct sljit_compiler *compiler, sljit_si type, sljit_si src, sljit_sw srcw)

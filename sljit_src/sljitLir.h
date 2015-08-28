@@ -285,7 +285,8 @@ struct sljit_memory_fragment {
 struct sljit_label {
 	struct sljit_label *next;
 #ifdef SLJIT_CONFIG_LLVM
-        LLVMValueRef addr;
+	LLVMValueRef addr;
+	LLVMBuilderRef llvm_builder;
 #else
 	sljit_uw addr;
 #endif
@@ -296,7 +297,7 @@ struct sljit_label {
 struct sljit_jump {
 	struct sljit_jump *next;
 #ifdef SLJIT_CONFIG_LLVM
-        LLVMValueRef addr;
+	LLVMValueRef addr;
 #else
 	sljit_uw addr;
 #endif
@@ -411,8 +412,8 @@ struct sljit_compiler {
 	LLVMExecutionEngineRef llvm_engine;
 	LLVMValueRef llvm_regs;
 	LLVMValueRef llvm_flags;
-        void *llvm_native_code;
-        struct sljit_label *llvm_pending_label;
+	void *llvm_native_code;
+	struct sljit_label *llvm_pending_label;
 #endif
 
 #if (defined SLJIT_VERBOSE && SLJIT_VERBOSE)
@@ -1071,9 +1072,6 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_fcmp(struct sljit_compile
 
 /* Set the destination of the jump to this label. */
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_label(struct sljit_jump *jump, struct sljit_label* label);
-#ifdef SLJIT_CONFIG_LLVM
-SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_set_label(struct sljit_compiler *compiler, struct sljit_jump *jump, struct sljit_label* label);
-#endif
 /* Set the destination address of the jump to this label. */
 SLJIT_API_FUNC_ATTRIBUTE void sljit_set_target(struct sljit_jump *jump, sljit_uw target);
 
