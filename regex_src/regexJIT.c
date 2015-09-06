@@ -2310,9 +2310,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 
 void regex_free_machine(struct regex_machine *machine)
 {
-#ifndef SLJIT_CONFIG_LLVM
 	sljit_free_code(machine->continue_match);
-#endif
 	SLJIT_FREE(machine);
 }
 

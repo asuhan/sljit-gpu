@@ -91,11 +91,6 @@ void sljit_free_llvm_compiler_impl(struct sljit_compiler *compiler) {
 	LLVMDisposeBuilder(compiler->llvm_builder);
 }
 
-void sljit_llvm_free_code_impl(struct sljit_compiler *compiler) {
-	// TODO(alex)
-	// LLVMDisposeExecutionEngine(compiler->llvm_engine);
-}
-
 static LLVMValueRef ll_int(const sljit_sw val, unsigned num_bits) {
 	return LLVMConstInt(LLVMIntType(num_bits), val, 0);
 }

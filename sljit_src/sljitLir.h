@@ -409,7 +409,6 @@ struct sljit_compiler {
 	LLVMModuleRef llvm_module;
 	LLVMBuilderRef llvm_builder;
 	LLVMValueRef llvm_func;
-	LLVMExecutionEngineRef llvm_engine;
 	LLVMValueRef llvm_regs;
 	LLVMValueRef llvm_flags;
 	void *llvm_native_code;
@@ -471,10 +470,6 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_compiler_verbose(struct sljit_compiler *comp
 
 SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compiler);
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code);
-
-#ifdef SLJIT_CONFIG_LLVM
-SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_free_code(struct sljit_compiler *compiler);
-#endif
 
 /*
    After the machine code generation is finished we can retrieve the allocated

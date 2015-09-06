@@ -69,12 +69,6 @@ static sljit_si silent = 0;
 		return; \
 	}
 
-#ifdef SLJIT_CONFIG_LLVM
-#define SLJIT_FREE_CODE() sljit_llvm_free_code(compiler)
-#else
-#define SLJIT_FREE_CODE() sljit_free_code(code.code)
-#endif
-
 static void cond_set(struct sljit_compiler *compiler, sljit_si dst, sljit_sw dstw, sljit_si type)
 {
 	/* Testing both sljit_emit_op_flags and sljit_emit_jump. */
@@ -177,7 +171,7 @@ static void test1(void)
 	FAILED(code.func3(3, -21, 86) != -21, "test1 case 1 failed\n");
 	FAILED(code.func3(4789, 47890, 997) != 47890, "test1 case 2 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -239,7 +233,7 @@ static void test2(void)
 	FAILED(buf[6] != 3456, "test2 case 6 failed\n");
 	FAILED(buf[7] != 3456, "test2 case 6 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -280,7 +274,7 @@ static void test3(void)
 	FAILED(buf[3] != ~9876, "test3 case 3 failed\n");
 	FAILED(buf[4] != ~0x12345678, "test3 case 4 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -317,7 +311,7 @@ static void test4(void)
 	FAILED(buf[2] != -4567, "test4 case 3 failed\n");
 	FAILED(buf[3] != -299, "test4 case 4 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -384,7 +378,7 @@ static void test5(void)
 	FAILED(buf[7] != 0x5bf01e44, "test5 case 8 failed\n");
 	FAILED(buf[8] != 270, "test5 case 9 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -460,7 +454,7 @@ static void test6(void)
 	FAILED(buf[8] != 100 + 32767, "test6 case 10 failed\n");
 	FAILED(buf[9] != 0x152aa42e, "test6 case 11 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -519,7 +513,7 @@ static void test7(void)
 	FAILED(buf[6] != 0xa56c82c0, "test7 case 8 failed\n");
 	FAILED(buf[7] != 0x3b3a8095, "test7 case 9 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -607,7 +601,7 @@ static void test8(void)
 	FAILED(buf[11] != 1, "test8 case 11 failed\n");
 	FAILED(buf[12] != 0, "test8 case 12 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -734,7 +728,7 @@ static void test9(void)
 	FAILED(buf[11] != 0x4ae37da9, "test9 case 12 failed\n");
 	FAILED(buf[12] != 0x63f65c, "test9 case 13 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -797,7 +791,7 @@ static void test10(void)
 	FAILED(buf[6] != SLJIT_W(0x123456789) * 3, "test10 case 8 failed\n");
 #endif
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1224,7 +1218,7 @@ static void test15(void)
 	FAILED(buf[5] != 335, "test15 case 7 failed\n");
 	FAILED(buf[6] != -15, "test15 case 8 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1289,7 +1283,7 @@ static void test16(void)
 	/* For benchmarking. */
 	/* FAILED(code.func2(3, 11) != 16381, "test16 case 1 failed\n"); */
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1332,7 +1326,7 @@ static void test17(void)
 	FAILED((sljit_uw)buf[3] != 0x81818c00, "test17 case 4 failed\n");
 	FAILED((sljit_uw)buf[4] != 0x81818fff, "test17 case 5 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1440,7 +1434,7 @@ static void test18(void)
 	FAILED(buf[1] != 0x44332211, "test18 case 2 failed\n");
 #endif
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1492,7 +1486,7 @@ static void test19(void)
 	FAILED(buf[6] != 12, "test19 case 7 failed\n");
 	FAILED(buf[7] != 10, "test19 case 8 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1549,7 +1543,7 @@ static void test20(void)
 	FAILED(buf[3] != 17, "test20 case 3 failed\n");
 	FAILED(buf[4] != 7, "test20 case 4 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 
 	compiler = sljit_create_compiler();
 	sljit_emit_enter(compiler, 0, 0, 3, 0, 0, 0, SLJIT_MAX_LOCAL_SIZE);
@@ -1572,7 +1566,7 @@ static void test20(void)
 	/* Just survive this code. */
 	code.func0();
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1740,7 +1734,7 @@ static void test22(void)
 	FAILED(bbuf[3] != -56, "test22 case 17 failed\n");
 	FAILED(bbuf[4] != 2, "test22 case 18 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1849,7 +1843,7 @@ static void test23(void)
 	FAILED(u.asbytes[3] != 0x78, "test23 case 16 failed\n");
 #endif
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -1966,7 +1960,7 @@ static void test24(void)
 	FAILED(bbuf[6] != -128, "test24 case 15 failed\n");
 #endif
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -2036,7 +2030,7 @@ static void test25(void)
 	FAILED(buf[12] != SLJIT_W(0x07fff00080018001), "test25 case 13 failed\n");
 	FAILED(buf[13] != SLJIT_W(0x07fff00ffff00000), "test25 case 14 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 #endif
 	successful_tests++;
 }
@@ -2113,7 +2107,7 @@ static void test26(void)
 		FAILED(dbuf[3] != -2.875, "test26 case 7 failed\n");
 	}
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -2316,7 +2310,7 @@ static void test27(void)
 	FAILED(buf[35] != 1, "test27 case 36 failed\n");
 	FAILED(buf[36] != 10, "test27 case 37 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 #undef SET_NEXT_BYTE
 #undef RESULT
@@ -2536,7 +2530,7 @@ static void test29(void)
 
 	FAILED(buf[24] != -91, "test29 case 25 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -2600,7 +2594,7 @@ static void test30(void)
 	code.func1((sljit_sw)&buf);
 	FAILED(buf[0] != 9, "test30 case 1 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -2693,7 +2687,7 @@ static void test31(void)
 #endif
 	FAILED(buf[9] != -1541, "test31 case 10 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -2881,7 +2875,7 @@ static void test33(void)
 	FAILED(buf[5] != 0x125, "test33 case 6 failed\n");
 	FAILED(buf[6] != 1, "test33 case 7 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -3215,7 +3209,7 @@ static void test36(void)
 			return;
 		}
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 #undef TEST_CASES
@@ -3326,7 +3320,7 @@ static void test37(void)
 	FAILED(buf[13] != 1, "test37 case 16 failed\n");
 	FAILED((buf[14] & 0xffffffff) != 0, "test37 case 17 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 #undef BITN
@@ -3410,7 +3404,7 @@ static void test38(void)
 	/* Just survive this. */
 	FAILED(code.func0() != 1, "test38 case 1 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 #endif
 	successful_tests++;
 }
@@ -3550,7 +3544,7 @@ static void test40(void)
 	FAILED(buf[8] != 1, "test40 case 10 failed\n");
 	FAILED(buf[9] != 0x123457, "test40 case 11 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -3915,7 +3909,7 @@ static void test42(void)
 	FAILED(buf[17] != SLJIT_W(-47), "test42 case 18 failed\n");
 	FAILED(buf[18] != SLJIT_W(35949148), "test42 case 19 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -4037,7 +4031,7 @@ static void test44(void)
 	FAILED(buf[3] != buf + 4, "test44 case 4 failed\n");
 	FAILED(buf[4] != buf + 2, "test44 case 5 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -4256,7 +4250,7 @@ static void test46(void)
 	FAILED(buf2[4] != -123, "test46 case 29 failed\n");
 	FAILED(buf2[5] != -14, "test46 case 30 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -4301,7 +4295,7 @@ static void test47(void)
 	FAILED(buf[1] != 0xd37c10, "test47 case 2 failed\n");
 	FAILED(buf[2] != 0x59b48e, "test47 case 3 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -4733,7 +4727,7 @@ static void test51(void)
 
 	FAILED(buf[1] != (39 * 5 * (SLJIT_NUMBER_OF_REGISTERS - 2)), "test51 case 1 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 
 	/* Next test. */
 
@@ -4765,7 +4759,7 @@ static void test51(void)
 
 	FAILED(code.func0() != (SLJIT_NUMBER_OF_SCRATCH_REGISTERS * 35 + SLJIT_NUMBER_OF_SAVED_REGISTERS * 17), "test51 case 2 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 
 	/* Next test. */
 
@@ -4797,7 +4791,7 @@ static void test51(void)
 
 	FAILED(code.func0() != (SLJIT_NUMBER_OF_SCRATCH_REGISTERS * 43 + SLJIT_NUMBER_OF_SAVED_REGISTERS * 68), "test51 case 3 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -4919,7 +4913,7 @@ static void test53(void)
 
 	FAILED((buf[0] & (sizeof(sljit_d) - 1)) != 0, "test53 case 1 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 
 	/* Next test. */
 
@@ -4943,7 +4937,7 @@ static void test53(void)
 
 	FAILED((buf[0] & (sizeof(sljit_d) - 1)) != 0, "test53 case 2 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 
@@ -4991,7 +4985,7 @@ static void test54(void)
 	FAILED(buf[4] != 1, "test54 case 5 failed\n");
 	FAILED(buf[5] != 0, "test54 case 6 failed\n");
 
-	SLJIT_FREE_CODE();
+	sljit_free_code(code.code);
 	successful_tests++;
 }
 

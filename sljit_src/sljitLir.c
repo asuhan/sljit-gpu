@@ -25,6 +25,7 @@
  */
 
 #include "sljitLir.h"
+#include <stddef.h>
 
 #define CHECK_ERROR() \
 	do { \
@@ -439,12 +440,6 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compile
 	SLJIT_FREE(compiler);
 }
 
-void sljit_llvm_free_code_impl(struct sljit_compiler *compiler);
-
-SLJIT_API_FUNC_ATTRIBUTE void sljit_llvm_free_code(struct sljit_compiler *compiler)
-{
-	sljit_llvm_free_code_impl(compiler);
-}
 #else
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_compiler(struct sljit_compiler *compiler)
 {
@@ -488,7 +483,11 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code)
 #else
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_code(void* code)
 {
+#ifdef SLJIT_CONFIG_LLVM
+	// TODO(alex)
+#else
 	SLJIT_FREE_EXEC(code);
+#endif
 }
 #endif
 
