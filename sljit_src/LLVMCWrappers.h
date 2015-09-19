@@ -55,6 +55,14 @@ LLVMValueRef LLVMBuildMulOverflow(LLVMBuilderRef B, LLVMModuleRef m,
 
 LLVMValueRef LLVMBuildClz(LLVMBuilderRef B, LLVMModuleRef m, LLVMValueRef operand, const char *Name);
 
+void* sljit_create_nvptx_backend();
+
+void sljit_free_nvptx_backend(void* nvptx_backend);
+
+char* generate_ptx(void* nvptx_backend, const char* nvvm_ir);
+
+void free_ptx(char* ptx);
+
 #ifdef __cplusplus
 }
 #endif /* !defined(__cplusplus) */
