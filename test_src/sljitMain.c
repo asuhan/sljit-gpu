@@ -31,7 +31,7 @@
 
 void sljit_test(int argc, char* argv[]);
 
-void error(SLJIT_CONST char* str)
+void error(const char* str)
 {
 	printf("An error occured: %s\n", str);
 	exit(-1);
@@ -47,7 +47,7 @@ void devel(void)
 {
 	executable_code code;
 
-	struct sljit_compiler *compiler = sljit_create_compiler();
+	struct sljit_compiler *compiler = sljit_create_compiler(NULL);
 	sljit_sw buf[4];
 
 	if (!compiler)

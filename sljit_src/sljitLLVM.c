@@ -1,3 +1,6 @@
+#ifndef SLJIT_LLVM_C
+#define SLJIT_LLVM_C
+
 /*
  *    Stack-less Just-In-Time compiler
  *
@@ -27,7 +30,7 @@
 #include "sljitLir.h"
 #include "LLVMCWrappers.h"
 
-SLJIT_API_FUNC_ATTRIBUTE SLJIT_CONST char* sljit_get_platform_name(void)
+SLJIT_API_FUNC_ATTRIBUTE const char* sljit_get_platform_name(void)
 {
 	return "LLVM" SLJIT_CPUINFO;
 }
@@ -150,9 +153,9 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_generate_code(struct sljit_compiler *compil
 	return compiler->llvm_native_code;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_set_context(struct sljit_compiler *compiler,
-	sljit_si options, sljit_si args, sljit_si scratches, sljit_si saveds,
-	sljit_si fscratches, sljit_si fsaveds, sljit_si local_size)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_set_context(struct sljit_compiler *compiler,
+	sljit_s32 options, sljit_s32 args, sljit_s32 scratches, sljit_s32 saveds,
+	sljit_s32 fscratches, sljit_s32 fsaveds, sljit_s32 local_size)
 {
 	// TODO(alex)
 	return SLJIT_SUCCESS;
@@ -162,7 +165,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_set_context(struct sljit_compiler *compi
 /*  Operators                                                            */
 /* --------------------------------------------------------------------- */
 
-static LLVMValueRef reg_access(sljit_si reg, struct sljit_compiler *compiler)
+static LLVMValueRef reg_access(sljit_s32 reg, struct sljit_compiler *compiler)
 {
 	SLJIT_ASSERT(reg >= 1 && reg <= SLJIT_NUMBER_OF_REGISTERS + 4);
 	LLVMValueRef reg_idx_lv = LLVMConstInt(LLVMInt32Type(), reg - 1, 0);
@@ -174,12 +177,12 @@ static LLVMValueRef reg_access(sljit_si reg, struct sljit_compiler *compiler)
 		"reg_access");
 }
 
-static LLVMValueRef reg_load(sljit_si reg, struct sljit_compiler *compiler)
+static LLVMValueRef reg_load(sljit_s32 reg, struct sljit_compiler *compiler)
 {
 	return LLVMBuildLoad(compiler->llvm_builder, reg_access(reg, compiler), "reg_load");
 }
 
-static void reg_write(LLVMValueRef reg, LLVMValueRef val, struct sljit_compiler *compiler, const sljit_si int_op)
+static void reg_write(LLVMValueRef reg, LLVMValueRef val, struct sljit_compiler *compiler, const sljit_s32 int_op)
 {
 	SLJIT_ASSERT(reg);
 	SLJIT_ASSERT(LLVMGetTypeKind(LLVMTypeOf(reg)) == LLVMPointerTypeKind);
@@ -233,12 +236,12 @@ static void emit_label_deferred(struct sljit_label *label, struct sljit_compiler
 	compiler->llvm_func = cont_func;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_enter(struct sljit_compiler *compiler,
-	sljit_si options, sljit_si args, sljit_si scratches, sljit_si saveds,
-	sljit_si fscratches, sljit_si fsaveds, sljit_si local_size)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_enter(struct sljit_compiler *compiler,
+	sljit_s32 options, sljit_s32 args, sljit_s32 scratches, sljit_s32 saveds,
+	sljit_s32 fscratches, sljit_s32 fsaveds, sljit_s32 local_size)
 {
 	LLVMTypeRef param_types[args];
-	sljit_si i;
+	sljit_s32 i;
 
 	for (i = 0; i < args; ++i) {
 		param_types[i] = LLVMInt64Type();
@@ -287,11 +290,11 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_enter(struct sljit_compiler *compil
 	return SLJIT_SUCCESS;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_return(struct sljit_compiler *compiler, sljit_si op, sljit_si src, sljit_sw srcw)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_return(struct sljit_compiler *compiler, sljit_s32 op, sljit_s32 src, sljit_sw srcw)
 {
 	switch (op) {
 	case SLJIT_MOV:
-	case SLJIT_MOV_SB: {
+	case SLJIT_MOV_S8: {
 		sljit_emit_op1(compiler, op, SLJIT_RETURN_REG, 0, src, srcw);
 		LLVMBuildRet(compiler->llvm_builder, reg_load(SLJIT_RETURN_REG, compiler));
 		break;
@@ -307,26 +310,26 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_return(struct sljit_compiler *compi
 	return SLJIT_SUCCESS;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_fast_enter(struct sljit_compiler *compiler, sljit_si dst, sljit_sw dstw)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fast_enter(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw)
 {
 	SLJIT_ASSERT(0);
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_fast_return(struct sljit_compiler *compiler, sljit_si src, sljit_sw srcw)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fast_return(struct sljit_compiler *compiler, sljit_s32 src, sljit_sw srcw)
 {
 	SLJIT_ASSERT(0);
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op0(struct sljit_compiler *compiler, sljit_si op)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op0(struct sljit_compiler *compiler, sljit_s32 op)
 {
-	unsigned num_bits = (op & SLJIT_INT_OP) ? 32 : 64;
+	unsigned num_bits = (op & SLJIT_I32_OP) ? 32 : 64;
 	switch (GET_OPCODE(op)) {
-	case SLJIT_LUMUL:
-	case SLJIT_LSMUL: {
+	case SLJIT_LMUL_UW:
+	case SLJIT_LMUL_SW: {
 		SLJIT_ASSERT(num_bits == 64);
 		LLVMValueRef lhs_lv = reg_load(SLJIT_R(0), compiler);
 		LLVMValueRef rhs_lv = reg_load(SLJIT_R(1), compiler);
-		if (GET_OPCODE(op) == SLJIT_LUMUL) {
+		if (GET_OPCODE(op) == SLJIT_LMUL_UW) {
 			lhs_lv = LLVMBuildZExt(compiler->llvm_builder, lhs_lv, LLVMIntType(128), "zext_lumul");
 			rhs_lv = LLVMBuildZExt(compiler->llvm_builder, rhs_lv, LLVMIntType(128), "zext_lumul");
 		} else {
@@ -341,18 +344,18 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op0(struct sljit_compiler *compiler
 		reg_write(reg_access(SLJIT_R(1), compiler), high, compiler, 0);
 		break;
 	}
-	case SLJIT_LUDIV:
-	case SLJIT_LSDIV: {
+	case SLJIT_DIVMOD_UW:
+	case SLJIT_DIVMOD_SW: {
 		LLVMValueRef lhs_lv = reg_load(SLJIT_R(0), compiler);
 		LLVMValueRef rhs_lv = reg_load(SLJIT_R(1), compiler);
 		if (num_bits == 32) {
 			lhs_lv = LLVMBuildTrunc(compiler->llvm_builder, lhs_lv, LLVMInt32Type(), "ldiv_lhs");
 			rhs_lv = LLVMBuildTrunc(compiler->llvm_builder, rhs_lv, LLVMInt32Type(), "ldiv_rhs");
 		}
-		LLVMValueRef res = (GET_OPCODE(op) == SLJIT_LUDIV)
+		LLVMValueRef res = (GET_OPCODE(op) == SLJIT_DIVMOD_UW)
 			? LLVMBuildUDiv(compiler->llvm_builder, lhs_lv, rhs_lv, "ldiv_res")
 			: LLVMBuildSDiv(compiler->llvm_builder, lhs_lv, rhs_lv, "ldiv_res");
-		LLVMValueRef rem = (GET_OPCODE(op) == SLJIT_LUDIV)
+		LLVMValueRef rem = (GET_OPCODE(op) == SLJIT_DIVMOD_UW)
 			? LLVMBuildURem(compiler->llvm_builder, lhs_lv, rhs_lv, "ldiv_rem")
 			: LLVMBuildSRem(compiler->llvm_builder, lhs_lv, rhs_lv, "ldiv_rem");
 		reg_write(reg_access(SLJIT_R(0), compiler), res, compiler, num_bits == 32);
@@ -368,9 +371,9 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op0(struct sljit_compiler *compiler
 	return SLJIT_SUCCESS;
 }
 
-static LLVMValueRef mem_access_1(sljit_si reg, sljit_sw regw, struct sljit_compiler *compiler, unsigned num_bits, sljit_si update)
+static LLVMValueRef mem_access_1(sljit_s32 reg, sljit_sw regw, struct sljit_compiler *compiler, unsigned num_bits, sljit_s32 update)
 {
-	sljit_si addr_reg = reg & REG_MASK;
+	sljit_s32 addr_reg = reg & REG_MASK;
 	LLVMValueRef reg_or_zero = addr_reg > 0 ? reg_load(addr_reg, compiler) : ll_i64(0);
 	LLVMValueRef addr_i64 = LLVMBuildAdd(
 		compiler->llvm_builder,
@@ -387,10 +390,10 @@ static LLVMValueRef mem_access_1(sljit_si reg, sljit_sw regw, struct sljit_compi
 		"bitcast_addr_idx");
 }
 
-static LLVMValueRef mem_access_2(sljit_si regs, sljit_sw shiftw, struct sljit_compiler *compiler, unsigned num_bits, sljit_si update)
+static LLVMValueRef mem_access_2(sljit_s32 regs, sljit_sw shiftw, struct sljit_compiler *compiler, unsigned num_bits, sljit_s32 update)
 {
-	sljit_si idx_reg = (regs & REG_MASK);
-	sljit_si off_reg = (regs & OFFS_REG_MASK) >> 8;
+	sljit_s32 idx_reg = (regs & REG_MASK);
+	sljit_s32 off_reg = (regs & OFFS_REG_MASK) >> 8;
 	LLVMValueRef idx_lv = reg_load(idx_reg, compiler);
 	LLVMValueRef off_lv = reg_load(off_reg, compiler);
 	off_lv = LLVMBuildShl(
@@ -415,10 +418,10 @@ static LLVMValueRef mem_access_2(sljit_si regs, sljit_sw shiftw, struct sljit_co
 
 static LLVMValueRef emit_dst(
 	struct sljit_compiler *compiler,
-	sljit_si dst,
+	sljit_s32 dst,
 	sljit_sw dstw,
 	unsigned num_bits,
-	sljit_si update)
+	sljit_s32 update)
 {
 	LLVMValueRef dest_lv = NULL;
 	if (FAST_IS_REG(dst)) {
@@ -441,10 +444,10 @@ static LLVMValueRef emit_dst(
 
 static LLVMValueRef emit_src(
 	struct sljit_compiler *compiler,
-	sljit_si src,
+	sljit_s32 src,
 	sljit_sw srcw,
 	unsigned num_bits,
-	sljit_si update)
+	sljit_s32 update)
 {
 	LLVMValueRef src_lv = NULL;
 	if (src & SLJIT_IMM) {
@@ -488,28 +491,28 @@ static LLVMValueRef emit_src(
 	return src_lv;
 }
 
-static unsigned mov_num_bits(sljit_si op) {
-	sljit_si op_flags = GET_ALL_FLAGS(op);
+static unsigned mov_num_bits(sljit_s32 op) {
+	sljit_s32 op_flags = GET_ALL_FLAGS(op);
 	op = GET_OPCODE(op);
 
 	switch (op) {
-	case SLJIT_MOV_SB:
-	case SLJIT_MOV_UB:
-	case SLJIT_MOVU_SB:
-	case SLJIT_MOVU_UB:
+	case SLJIT_MOV_S8:
+	case SLJIT_MOV_U8:
+	case SLJIT_MOVU_S8:
+	case SLJIT_MOVU_U8:
 		SLJIT_ASSERT(!op_flags);
 		return 8;
-	case SLJIT_MOV_SH:
-	case SLJIT_MOV_UH:
-	case SLJIT_MOVU_SH:
-	case SLJIT_MOVU_UH:
+	case SLJIT_MOV_S16:
+	case SLJIT_MOV_U16:
+	case SLJIT_MOVU_S16:
+	case SLJIT_MOVU_U16:
 		SLJIT_ASSERT(!op_flags);
 		return 16;
 		break;
-	case SLJIT_MOV_SI:
-	case SLJIT_MOV_UI:
-	case SLJIT_MOVU_SI:
-	case SLJIT_MOVU_UI:
+	case SLJIT_MOV_S32:
+	case SLJIT_MOV_U32:
+	case SLJIT_MOVU_S32:
+	case SLJIT_MOVU_U32:
 		return 32;
 		break;
 	case SLJIT_MOV:
@@ -519,7 +522,7 @@ static unsigned mov_num_bits(sljit_si op) {
 	case SLJIT_NOT:
 	case SLJIT_NEG:
 	case SLJIT_CLZ:
-		return (op_flags & SLJIT_INT_OP) ? 32 : 64;
+		return (op_flags & SLJIT_I32_OP) ? 32 : 64;
 		break;
 	default:
 		SLJIT_ASSERT(0);
@@ -527,12 +530,12 @@ static unsigned mov_num_bits(sljit_si op) {
 	}
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op1(struct sljit_compiler *compiler, sljit_si op,
-	sljit_si dst, sljit_sw dstw,
-	sljit_si src, sljit_sw srcw)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op1(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 dst, sljit_sw dstw,
+	sljit_s32 src, sljit_sw srcw)
 {
-	sljit_si update = 0;
-	sljit_si op_flags = GET_ALL_FLAGS(op);
+	sljit_s32 update = 0;
+	sljit_s32 op_flags = GET_ALL_FLAGS(op);
 	unsigned num_bits = 0;
 
 	CHECK_ERROR();
@@ -550,24 +553,24 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op1(struct sljit_compiler *compiler
 	}
 
 	switch (op) {
-	case SLJIT_MOV_SB:
-	case SLJIT_MOV_UB:
-	case SLJIT_MOVU_SB:
-	case SLJIT_MOVU_UB:
+	case SLJIT_MOV_S8:
+	case SLJIT_MOV_U8:
+	case SLJIT_MOVU_S8:
+	case SLJIT_MOVU_U8:
 		SLJIT_ASSERT(!op_flags);
 		num_bits = 8;
 		break;
-	case SLJIT_MOV_SH:
-	case SLJIT_MOV_UH:
-	case SLJIT_MOVU_SH:
-	case SLJIT_MOVU_UH:
+	case SLJIT_MOV_S16:
+	case SLJIT_MOV_U16:
+	case SLJIT_MOVU_S16:
+	case SLJIT_MOVU_U16:
 		SLJIT_ASSERT(!op_flags);
 		num_bits = 16;
 		break;
-	case SLJIT_MOV_SI:
-	case SLJIT_MOV_UI:
-	case SLJIT_MOVU_SI:
-	case SLJIT_MOVU_UI:
+	case SLJIT_MOV_S32:
+	case SLJIT_MOV_U32:
+	case SLJIT_MOVU_S32:
+	case SLJIT_MOVU_U32:
 		num_bits = 32;
 		break;
 	case SLJIT_MOV:
@@ -577,7 +580,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op1(struct sljit_compiler *compiler
 	case SLJIT_NOT:
 	case SLJIT_NEG:
 	case SLJIT_CLZ:
-		num_bits = (op_flags & SLJIT_INT_OP) ? 32 : 64;
+		num_bits = (op_flags & SLJIT_I32_OP) ? 32 : 64;
 		break;
 	default:
 		SLJIT_ASSERT(0);
@@ -605,18 +608,18 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op1(struct sljit_compiler *compiler
 	case SLJIT_MOV_P:
 	case SLJIT_MOVU_P:
 	case SLJIT_MOVU:
-	case SLJIT_MOV_SI:
-	case SLJIT_MOV_UI:
-	case SLJIT_MOVU_SI:
-	case SLJIT_MOVU_UI:
-	case SLJIT_MOV_SH:
-	case SLJIT_MOV_UH:
-	case SLJIT_MOVU_SH:
-	case SLJIT_MOVU_UH:
-	case SLJIT_MOV_SB:
-	case SLJIT_MOV_UB:
-	case SLJIT_MOVU_SB:
-	case SLJIT_MOVU_UB:
+	case SLJIT_MOV_S32:
+	case SLJIT_MOV_U32:
+	case SLJIT_MOVU_S32:
+	case SLJIT_MOVU_U32:
+	case SLJIT_MOV_S16:
+	case SLJIT_MOV_U16:
+	case SLJIT_MOVU_S16:
+	case SLJIT_MOVU_U16:
+	case SLJIT_MOV_S8:
+	case SLJIT_MOV_U8:
+	case SLJIT_MOVU_S8:
+	case SLJIT_MOVU_U8:
 		result = src_lv;
 		break;
 	case SLJIT_NOT: {
@@ -680,13 +683,13 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op1(struct sljit_compiler *compiler
 	return SLJIT_SUCCESS;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op2(struct sljit_compiler *compiler, sljit_si op,
-	sljit_si dst, sljit_sw dstw,
-	sljit_si src1, sljit_sw src1w,
-	sljit_si src2, sljit_sw src2w)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op2(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 dst, sljit_sw dstw,
+	sljit_s32 src1, sljit_sw src1w,
+	sljit_s32 src2, sljit_sw src2w)
 {
-	sljit_si flags = GET_ALL_FLAGS(op);
-	unsigned num_bits = (flags & SLJIT_INT_OP) ? 32 : 64;
+	sljit_s32 flags = GET_ALL_FLAGS(op);
+	unsigned num_bits = (flags & SLJIT_I32_OP) ? 32 : 64;
 	LLVMValueRef dest_lv = dst == SLJIT_UNUSED ? NULL : emit_dst(compiler, dst, dstw, num_bits, 0);
 	LLVMValueRef lhs = emit_src(compiler, src1, src1w, num_bits, 0);
 	LLVMValueRef rhs = emit_src(compiler, src2, src2w, num_bits, 0);
@@ -695,7 +698,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op2(struct sljit_compiler *compiler
 
 	LLVMValueRef flag_c_ptr = llvm_flag_c(compiler);
         LLVMValueRef flag_c = LLVMBuildLoad(compiler->llvm_builder, flag_c_ptr, "flag_c");
-	sljit_si with_overflow = flags && !(flags & SLJIT_KEEP_FLAGS);
+	sljit_s32 with_overflow = flags && !(flags & SLJIT_KEEP_FLAGS);
 
 	switch (GET_OPCODE(op)) {
 	case SLJIT_ADD:
@@ -810,7 +813,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op2(struct sljit_compiler *compiler
 
 	if (dst != SLJIT_UNUSED) {
 		SLJIT_ASSERT(dest_lv);
-		reg_write(dest_lv, result, compiler, flags & SLJIT_INT_OP);
+		reg_write(dest_lv, result, compiler, flags & SLJIT_I32_OP);
 	}
 	if (with_overflow) {
 		LLVMValueRef e_lv = LLVMBuildICmp(
@@ -853,7 +856,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op2(struct sljit_compiler *compiler
 		}
 		else if (flags & SLJIT_SET_E) {
 		}
-		else if (flags & SLJIT_INT_OP) {
+		else if (flags & SLJIT_I32_OP) {
 		}
 		else if (flags & SLJIT_KEEP_FLAGS) {
 		}
@@ -865,18 +868,18 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op2(struct sljit_compiler *compiler
 	return SLJIT_SUCCESS;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_get_register_index(sljit_si reg)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_register_index(sljit_s32 reg)
 {
 	SLJIT_ASSERT(0);
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_get_float_register_index(sljit_si reg)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_float_register_index(sljit_s32 reg)
 {
 	SLJIT_ASSERT(0);
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op_custom(struct sljit_compiler *compiler,
-	void *instruction, sljit_si size)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op_custom(struct sljit_compiler *compiler,
+	void *instruction, sljit_s32 size)
 {
 	SLJIT_ASSERT(0);
 }
@@ -890,23 +893,23 @@ static void init_compiler(void)
 	// TODO(alex)
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_is_fpu_available(void)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_is_fpu_available(void)
 {
 	// TODO(alex)
 	return 0;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_fop1(struct sljit_compiler *compiler, sljit_si op,
-	sljit_si dst, sljit_sw dstw,
-	sljit_si src, sljit_sw srcw)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop1(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 dst, sljit_sw dstw,
+	sljit_s32 src, sljit_sw srcw)
 {
 	SLJIT_ASSERT(0);
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_fop2(struct sljit_compiler *compiler, sljit_si op,
-	sljit_si dst, sljit_sw dstw,
-	sljit_si src1, sljit_sw src1w,
-	sljit_si src2, sljit_sw src2w)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_fop2(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 dst, sljit_sw dstw,
+	sljit_s32 src1, sljit_sw src1w,
+	sljit_s32 src2, sljit_sw src2w)
 {
 	SLJIT_ASSERT(0);
 }
@@ -946,7 +949,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_label* sljit_emit_label(struct sljit_compi
 	return label;
 }
 
-static LLVMValueRef load_flag(struct sljit_compiler *compiler, sljit_si type) {
+static LLVMValueRef load_flag(struct sljit_compiler *compiler, sljit_s32 type) {
 	LLVMValueRef flag;
 	type &= 0xff;
 	switch (type) {
@@ -1021,7 +1024,7 @@ static LLVMValueRef load_flag(struct sljit_compiler *compiler, sljit_si type) {
 	return flag;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_jump(struct sljit_compiler *compiler, sljit_si type)
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_jump(struct sljit_compiler *compiler, sljit_s32 type)
 {
 	struct sljit_jump *jump = NULL;
 	LLVMValueRef flag = NULL;
@@ -1155,7 +1158,7 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_jump* sljit_emit_jump(struct sljit_compile
 	return jump;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_ijump(struct sljit_compiler *compiler, sljit_si type, sljit_si src, sljit_sw srcw)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_ijump(struct sljit_compiler *compiler, sljit_s32 type, sljit_s32 src, sljit_sw srcw)
 {
 	switch (type) {
 	case SLJIT_CALL0:
@@ -1208,20 +1211,20 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_ijump(struct sljit_compiler *compil
 	return SLJIT_SUCCESS;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op_flags(struct sljit_compiler *compiler, sljit_si op,
-	sljit_si dst, sljit_sw dstw,
-	sljit_si src, sljit_sw srcw,
-	sljit_si type)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_emit_op_flags(struct sljit_compiler *compiler, sljit_s32 op,
+	sljit_s32 dst, sljit_sw dstw,
+	sljit_s32 src, sljit_sw srcw,
+	sljit_s32 type)
 {
 	if (dst == SLJIT_UNUSED) {
 		return SLJIT_SUCCESS;
 	}
-	sljit_si opcode = GET_OPCODE(op);
+	sljit_s32 opcode = GET_OPCODE(op);
 	SLJIT_ASSERT(opcode == SLJIT_OR || opcode == SLJIT_AND || opcode == SLJIT_XOR ||
 		(opcode >= SLJIT_MOV && opcode <= SLJIT_MOVU_P));
 	unsigned num_bits = (opcode >= SLJIT_MOV && opcode <= SLJIT_MOVU_P)
 		? mov_num_bits(opcode)
-		: (op & SLJIT_INT_OP) ? 32 : 64;
+		: (op & SLJIT_I32_OP) ? 32 : 64;
 	LLVMValueRef src_lv = src == SLJIT_UNUSED ? NULL : emit_src(compiler, src, srcw, num_bits, 0);
 	LLVMValueRef dest_lv = emit_dst(compiler, dst, dstw, num_bits, 0);
 	LLVMValueRef flag_lv = load_flag(compiler, type);
@@ -1243,7 +1246,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op_flags(struct sljit_compiler *com
 		flag_lv = LLVMBuildXor(compiler->llvm_builder, src_lv, flag_lv, "flag_xor");
 	}
 	reg_write(dest_lv, flag_lv, compiler, num_bits == 32);
-	sljit_si flags = GET_ALL_FLAGS(op);
+	sljit_s32 flags = GET_ALL_FLAGS(op);
 	if (flags & SLJIT_SET_U) {
 		SLJIT_ASSERT(0);
 	}
@@ -1272,7 +1275,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_emit_op_flags(struct sljit_compiler *com
 	return SLJIT_SUCCESS;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_get_local_base(struct sljit_compiler *compiler, sljit_si dst, sljit_sw dstw, sljit_sw offset)
+SLJIT_API_FUNC_ATTRIBUTE sljit_s32 sljit_get_local_base(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw, sljit_sw offset)
 {
 	LLVMValueRef dest_lv = emit_dst(compiler, dst, dstw, 64, 0);
 	reg_write(dest_lv, LLVMBuildAdd(compiler->llvm_builder,
@@ -1280,7 +1283,7 @@ SLJIT_API_FUNC_ATTRIBUTE sljit_si sljit_get_local_base(struct sljit_compiler *co
 	return SLJIT_SUCCESS;
 }
 
-SLJIT_API_FUNC_ATTRIBUTE struct sljit_const* sljit_emit_const(struct sljit_compiler *compiler, sljit_si dst, sljit_sw dstw, sljit_sw init_value)
+SLJIT_API_FUNC_ATTRIBUTE struct sljit_const* sljit_emit_const(struct sljit_compiler *compiler, sljit_s32 dst, sljit_sw dstw, sljit_sw init_value)
 {
 	// TODO(alex)
 	return NULL;
@@ -1295,3 +1298,5 @@ SLJIT_API_FUNC_ATTRIBUTE void sljit_set_const(sljit_uw addr, sljit_sw new_consta
 {
 	SLJIT_ASSERT(0);
 }
+
+#endif  // SLJIT_LLVM_C

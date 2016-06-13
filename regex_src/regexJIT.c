@@ -216,7 +216,7 @@ static void stack_destroy(struct stack *stack)
 	while (curr) {
 		prev = curr;
 		curr = curr->data.next;
-		SLJIT_FREE(prev);
+		SLJIT_FREE(prev, NULL);
 	}
 }
 
@@ -233,7 +233,7 @@ static int stack_push(struct stack *stack, int type, int value)
 		if (stack->index >= STACK_FRAGMENT_SIZE) {
 			stack->index = 0;
 			if (!stack->last->data.next) {
-				stack->last->data.next = (struct stack_fragment*)SLJIT_MALLOC(sizeof(struct stack_fragment));
+				stack->last->data.next = (struct stack_fragment*)SLJIT_MALLOC(sizeof(struct stack_fragment), NULL);
 				if (!stack->last->data.next)
 					return 1;
 				stack->last->data.next->data.next = NULL;
@@ -243,7 +243,7 @@ static int stack_push(struct stack *stack, int type, int value)
 		}
 	}
 	else if (!stack->first) {
-		stack->last = (struct stack_fragment*)SLJIT_MALLOC(sizeof(struct stack_fragment));
+		stack->last = (struct stack_fragment*)SLJIT_MALLOC(sizeof(struct stack_fragment), NULL);
 		if (!stack->last)
 			return 1;
 		stack->last->data.prev = NULL;
@@ -306,7 +306,7 @@ static int stack_push_copy(struct stack *stack, int items, int length)
 			counter -= STACK_FRAGMENT_SIZE - stack->index - 1 + 1;
 			stack->index = 0;
 			if (!stack->last->data.next) {
-				stack->last->data.next = (struct stack_fragment*)SLJIT_MALLOC(sizeof(struct stack_fragment));
+				stack->last->data.next = (struct stack_fragment*)SLJIT_MALLOC(sizeof(struct stack_fragment), NULL);
 				if (!stack->last->data.next)
 					return 1;
 				stack->last->data.next->data.next = NULL;
@@ -979,7 +979,7 @@ static int generate_transitions(struct compiler_common *compiler_common)
 	struct stack_item *item;
 
 	stack_init(depth);
-	compiler_common->dfa_transitions = SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size);
+	compiler_common->dfa_transitions = SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size, NULL);
 	if (!compiler_common->dfa_transitions)
 		return REGEX_MEMORY_ERROR;
 
@@ -1173,7 +1173,7 @@ static int generate_search_states(struct compiler_common *compiler_common)
 
 	compiler_common->terms_size = !(compiler_common->flags & REGEX_FAKE_MATCH_END) ? 1 : 2;
 	compiler_common->longest_range_size = 0;
-	compiler_common->search_states = SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size);
+	compiler_common->search_states = SLJIT_MALLOC(sizeof(struct stack_item) * compiler_common->dfa_size, NULL);
 	if (!compiler_common->search_states)
 		return REGEX_MEMORY_ERROR;
 
@@ -1875,7 +1875,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 	stack_destroy(&compiler_common.depth);
 	if (error_code) {
 		if (compiler_common.dfa_transitions)
-			SLJIT_FREE(compiler_common.dfa_transitions);
+			SLJIT_FREE(compiler_common.dfa_transitions, NULL);
 		if (error)
 			*error = error_code;
 		return NULL;
@@ -1884,7 +1884,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 	/* Step 3: Generate necessary data for depth-first search (Left->Right). */
 	error_code = generate_search_states(&compiler_common);
 	if (error_code) {
-		SLJIT_FREE(compiler_common.dfa_transitions);
+		SLJIT_FREE(compiler_common.dfa_transitions, NULL);
 		if (error)
 			*error = error_code;
 		return NULL;
@@ -1905,14 +1905,14 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 
 	BEGIN_GUARD
 
-	compiler_common.machine = (struct regex_machine*)SLJIT_MALLOC(sizeof(struct regex_machine) + (compiler_common.terms_size - 1) * sizeof(sljit_uw));
+	compiler_common.machine = (struct regex_machine*)SLJIT_MALLOC(sizeof(struct regex_machine) + (compiler_common.terms_size - 1) * sizeof(sljit_uw), NULL);
 	CHECK(!compiler_common.machine);
 
-	compiler_common.compiler = sljit_create_compiler();
+	compiler_common.compiler = sljit_create_compiler(NULL);
 	CHECK(!compiler_common.compiler);
 
 	if (compiler_common.longest_range_size > 0) {
-		compiler_common.range_jump_list = (struct sljit_jump**)SLJIT_MALLOC(sizeof(struct sljit_jump*) * compiler_common.longest_range_size);
+		compiler_common.range_jump_list = (struct sljit_jump**)SLJIT_MALLOC(sizeof(struct sljit_jump*) * compiler_common.longest_range_size, NULL);
 		CHECK(!compiler_common.range_jump_list);
 	}
 
@@ -2027,7 +2027,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 
 	EMIT_OP1(SLJIT_MOV, R_TEMP, 0, R_STRING, 0);
 #ifdef REGEX_USE_8BIT_CHARS
-	EMIT_OP1(SLJIT_MOV_UB, R_CURR_CHAR, 0, SLJIT_MEM1(R_TEMP), 0);
+	EMIT_OP1(SLJIT_MOV_U8, R_CURR_CHAR, 0, SLJIT_MEM1(R_TEMP), 0);
 	EMIT_OP2(SLJIT_ADD, R_TEMP, 0, R_TEMP, 0, SLJIT_IMM, 1);
 #else
 	EMIT_OP1(SLJIT_MOV_UH, R_CURR_CHAR, 0, SLJIT_MEM1(R_TEMP), 0);
@@ -2114,7 +2114,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 		EMIT_JUMP(fast_forward_jump, SLJIT_EQUAL);
 
 #ifdef REGEX_USE_8BIT_CHARS
-		EMIT_OP1(SLJIT_MOV_UB, R_CURR_CHAR, 0, SLJIT_MEM1(R_CURR_STATE), 0);
+		EMIT_OP1(SLJIT_MOV_U8, R_CURR_CHAR, 0, SLJIT_MEM1(R_CURR_STATE), 0);
 		EMIT_OP2(SLJIT_ADD, R_CURR_STATE, 0, R_CURR_STATE, 0, SLJIT_IMM, 1);
 #else
 		EMIT_OP1(SLJIT_MOV_UH, R_CURR_CHAR, 0, SLJIT_MEM1(R_CURR_STATE), 0);
@@ -2185,8 +2185,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 		sljit_set_label(fast_forward_jump, label);
 	CHECK(sljit_emit_return(compiler_common.compiler, SLJIT_UNUSED, 0, 0));
 
-	ind = 1;
-	while (ind < compiler_common.dfa_size - 1) {
+	for (ind = 1; ind < compiler_common.dfa_size - 1; ind++) {
 		if (compiler_common.search_states[ind].type >= 0) {
 			SLJIT_ASSERT(compiler_common.search_states[ind].type < compiler_common.terms_size);
 			EMIT_LABEL(label);
@@ -2228,7 +2227,6 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 			EMIT_OP1(SLJIT_MOV, SLJIT_MEM1(R_CURR_STATE), TERM_OFFSET_OF(compiler_common.search_states[ind].type, 1), SLJIT_IMM, -1);
 			CHECK(sljit_emit_ijump(compiler_common.compiler, SLJIT_JUMP, SLJIT_MEM2(R_CURR_STATE, R_TEMP), 0));
 		}
-		ind++;
 	}
 
 	if (ind == compiler_common.dfa_size - 1) {
@@ -2281,17 +2279,17 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 
 	stack_destroy(&compiler_common.stack);
 	stack_destroy(&compiler_common.depth);
-	SLJIT_FREE(compiler_common.dfa_transitions);
-	SLJIT_FREE(compiler_common.search_states);
+	SLJIT_FREE(compiler_common.dfa_transitions, NULL);
+	SLJIT_FREE(compiler_common.search_states, NULL);
 	if (compiler_common.range_jump_list)
-		SLJIT_FREE(compiler_common.range_jump_list);
+		SLJIT_FREE(compiler_common.range_jump_list, NULL);
 	if (compiler_common.compiler)
 		sljit_free_compiler(compiler_common.compiler);
 	if (done)
 		return compiler_common.machine;
 
 	if (compiler_common.machine) {
-		SLJIT_FREE(compiler_common.machine);
+		SLJIT_FREE(compiler_common.machine, NULL);
 	}
 	if (error)
 		*error = REGEX_MEMORY_ERROR;
@@ -2311,7 +2309,7 @@ struct regex_machine* regex_compile(const regex_char_t *regex_string, int length
 void regex_free_machine(struct regex_machine *machine)
 {
 	sljit_free_code(machine->continue_match);
-	SLJIT_FREE(machine);
+	SLJIT_FREE(machine, NULL);
 }
 
 const char* regex_get_platform_name(void)
@@ -2330,7 +2328,7 @@ struct regex_match* regex_begin_match(struct regex_machine *machine)
 	sljit_sw *end;
 	sljit_sw *entry_addrs;
 
-	struct regex_match *match = (struct regex_match*)SLJIT_MALLOC(sizeof(struct regex_match) + (machine->size * 2 - 1) * sizeof(sljit_sw));
+	struct regex_match *match = (struct regex_match*)SLJIT_MALLOC(sizeof(struct regex_match) + (machine->size * 2 - 1) * sizeof(sljit_sw), NULL);
 	if (!match)
 		return NULL;
 
@@ -2417,7 +2415,7 @@ void regex_reset_match(struct regex_match *match)
 
 void regex_free_match(struct regex_match *match)
 {
-	SLJIT_FREE(match);
+	SLJIT_FREE(match, NULL);
 }
 
 void regex_continue_match(struct regex_match *match, const regex_char_t *input_string, int length)

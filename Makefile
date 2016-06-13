@@ -1,25 +1,24 @@
-ifndef CROSS_COMPILER
+ifdef CROSS_COMPILER
+CC = $(CROSS_COMPILER)
+else
+ifndef CC
 # default compier
 CC = gcc
-else
-CC = $(CROSS_COMPILER)
+endif
 endif
 
-CXX = g++
-
 ifndef EXTRA_CPPFLAGS
-EXTRA_CPPFLAGS=
+EXTRA_CPPFLAGS=$(shell llvm-config-3.6 --cflags)
 endif
 
 ifndef EXTRA_LDFLAGS
-EXTRA_LDFLAGS=
+EXTRA_LDFLAGS=$(shell llvm-config-3.6 --cxxflags --ldflags --libs --system-libs)
 endif
 
-CPPFLAGS = $(EXTRA_CPPFLAGS) -DSLJIT_CONFIG_AUTO=1 -DSLJIT_CONFIG_LLVM=1 -Isljit_src $(shell llvm-config-3.6 --cflags)
-CFLAGS = -O0 -g -Wall -Wno-unused-function
-REGEX_CFLAGS = -fshort-wchar
-LDFLAGS = $(EXTRA_LDFLAGS) $(shell llvm-config-3.6 --cxxflags --ldflags --libs --system-libs)
-LD = g++
+CPPFLAGS = $(EXTRA_CPPFLAGS) -DSLJIT_CONFIG_AUTO=1 -DSLJIT_CONFIG_LLVM -Isljit_src -Wno-unused-function
+CFLAGS += -O0 -g -Wall
+REGEX_CFLAGS += $(CFLAGS) -fshort-wchar
+LDFLAGS = $(EXTRA_LDFLAGS)
 
 TARGET = sljit_test regex_test
 
@@ -65,7 +64,7 @@ clean:
 	rm -f $(BINDIR)/*.o $(BINDIR)/sljit_test $(BINDIR)/regex_test
 
 sljit_test: $(BINDIR)/sljitMain.o $(BINDIR)/sljitTest.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o
-	$(LD) $(CFLAGS) $(BINDIR)/sljitMain.o $(BINDIR)/sljitTest.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o -o $(BINDIR)/$@ $(LDFLAGS) -lm -lpthread
+	$(CXX) $(CFLAGS) $(BINDIR)/sljitMain.o $(BINDIR)/sljitTest.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o -o $(BINDIR)/$@ $(LDFLAGS) -lm -lpthread
 
 regex_test: $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o
-	$(LD) $(CFLAGS) $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o -o $(BINDIR)/$@ $(LDFLAGS) -lm -lpthread
+	$(CXX) $(CFLAGS) $(BINDIR)/regexMain.o $(BINDIR)/regexJIT.o $(BINDIR)/sljitLir.o $(BINDIR)/LLVMCWrappers.o -o $(BINDIR)/$@ $(LDFLAGS) -lm -lpthread
